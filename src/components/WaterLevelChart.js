@@ -1,74 +1,243 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts';
+import { FiTrendingUp, FiDownload } from 'react-icons/fi';
 
-const data = [
-  { date: '01 Apr', thames: 0.72, severn: 1.10, trent: 0.50 },
-  { date: '02 Apr', thames: 0.88, severn: 1.30, trent: 0.60 },
-  { date: '03 Apr', thames: 1.14, severn: 1.80, trent: 0.80 },
-  { date: '04 Apr', thames: 1.52, severn: 2.00, trent: 0.90 },
-  { date: '05 Apr', thames: 1.79, severn: 2.20, trent: 1.05 },
-  { date: '06 Apr', thames: 1.84, severn: 2.31, trent: 1.12 },
-  { date: '07 Apr', thames: 1.84, severn: 2.31, trent: 1.12 },
-];
+const COLORS = ['#00A86B', '#F59E0B', '#3B82F6'];
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: '#0D1F35',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 8, padding: '10px 14px',
+      fontFamily: 'Inter, sans-serif'
+    }}>
+      <p style={{ color: '#64748B', fontSize: 10, marginBottom: 6,
+        textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      {payload.map(p => (
+        <p key={p.name} style={{ color: p.color, fontSize: 12,
+          marginBottom: 2, fontFamily: 'JetBrains Mono, monospace' }}>
+          {p.name}: {p.value?.toFixed(3)}m
+        </p>
+      ))}
+    </div>
+  );
+};
 
 function WaterLevelChart() {
+  const [range, setRange]         = useState('7d');
+  const [stations, setStations]   = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading]     = useState(true);
+
+  const fetchData = useCallback((r) => {
+    setLoading(true);
+    fetch(`http://127.0.0.1:5000/api/chart/top-stations?range=${r}`)
+      .then(res => res.json())
+      .then(data => {
+        setStations(data);
+        const dayMap = {};
+        data.forEach(st => {
+          st.readings.forEach(reading => {
+            if (!dayMap[reading.day]) dayMap[reading.day] = { date: reading.day };
+            dayMap[reading.day][st.river || st.label] = reading.value;
+          });
+        });
+        const merged = Object.values(dayMap).sort((a, b) =>
+          a.date > b.date ? 1 : -1
+        );
+        setChartData(merged);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { fetchData(range); }, [range, fetchData]);
+
+  const handleRangeChange = (r) => {
+    setRange(r);
+    fetchData(r);
+  };
+
+  const exportCSV = () => {
+    if (!chartData.length) return;
+    const keys = stations.map(s => s.river || s.label);
+    const header = ['Date', ...keys].join(',');
+    const rows = chartData.map(d =>
+      [d.date, ...keys.map(k => d[k] ?? '')].join(',')
+    );
+    const csv  = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `flood-levels-${range}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const keys = stations.map(s => s.river || s.label);
+
+  const rangeOptions = [
+    { key: '24h', label: '24h' },
+    { key: '7d',  label: '7d'  },
+    { key: '30d', label: '30d' },
+  ];
+
   return (
     <div className="card">
-      <div className="card-title">Water Level Trend — 7 Days</div>
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-          <XAxis
-            dataKey="date"
-            tick={{ fill: '#7A8BA0', fontSize: 10 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fill: '#7A8BA0', fontSize: 10 }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={v => `${v}m`}
-          />
-          <Tooltip
-            contentStyle={{
-              background: 'rgba(11,31,58,0.95)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 8,
-              color: '#E8EDF4',
-              fontSize: 12
-            }}
-          />
-          <ReferenceLine y={1.2} stroke="#EF4444" strokeDasharray="4 4" strokeOpacity={0.6} />
-          <Line type="monotone" dataKey="thames" name="Thames"
-            stroke="#00A86B" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="severn" name="Severn"
-            stroke="#F59E0B" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="trent" name="Trent"
-            stroke="#3B82F6" strokeWidth={2} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
-      <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
-        {[['Thames','#00A86B'],['Severn','#F59E0B'],['Trent','#3B82F6']].map(([name, color]) => (
-          <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#7A8BA0' }}>
-            <div style={{ width: 20, height: 2, background: color, borderRadius: 2 }}></div>
-            {name}
+      <div style={{ display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: 14 }}>
+        <div className="card-title" style={{ marginBottom: 0 }}>
+          <FiTrendingUp size={13} style={{ color: '#00A86B' }} />
+          Water Level Trend
+          {loading && (
+            <span style={{ fontSize: 10, color: '#64748B',
+              fontWeight: 400, marginLeft: 8 }}>
+              Loading...
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {/* Range buttons */}
+          <div style={{ display: 'flex', gap: 3 }}>
+            {rangeOptions.map(r => (
+              <button key={r.key} onClick={() => handleRangeChange(r.key)}
+                style={{
+                  padding: '3px 10px', borderRadius: 6,
+                  border: '1px solid',
+                  borderColor: range === r.key
+                    ? 'rgba(0,168,107,0.4)'
+                    : 'rgba(255,255,255,0.06)',
+                  background: range === r.key
+                    ? 'rgba(0,168,107,0.12)'
+                    : 'transparent',
+                  color: range === r.key ? '#00A86B' : '#64748B',
+                  fontSize: 11, cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif', fontWeight: 500,
+                  transition: 'all 0.15s'
+                }}>{r.label}</button>
+            ))}
           </div>
-        ))}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#7A8BA0' }}>
-          <div style={{ width: 20, height: 2, background: '#EF4444', borderRadius: 2, opacity: 0.6 }}></div>
-          Alert threshold
+
+          {/* Export CSV */}
+          <button onClick={exportCSV} style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '3px 10px', borderRadius: 6,
+            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'transparent',
+            color: '#64748B', fontSize: 11, cursor: 'pointer',
+            fontFamily: 'Inter, sans-serif', fontWeight: 500,
+            transition: 'all 0.15s'
+          }}>
+            <FiDownload size={11} /> CSV
+          </button>
         </div>
       </div>
+
+      {loading ? (
+        <div style={{ height: 200, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', color: '#64748B', fontSize: 12 }}>
+          Fetching real readings from database...
+        </div>
+      ) : chartData.length === 0 ? (
+        <div style={{ height: 200, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', color: '#64748B', fontSize: 12 }}>
+          No data available for this range
+        </div>
+      ) : (
+        <>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData}
+              margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
+              <defs>
+                {keys.map((key, i) => (
+                  <linearGradient key={key} id={`g${i}`}
+                    x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor={COLORS[i]} stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor={COLORS[i]} stopOpacity={0}/>
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.04)" />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: '#64748B', fontSize: 10,
+                  fontFamily: 'Inter' }}
+                axisLine={false} tickLine={false}
+                interval="preserveStartEnd"
+                tickFormatter={v => {
+                  if (range === '24h') return v?.slice(11,16);
+                  if (range === '30d') return v?.slice(5);
+                  return v?.slice(5);
+                }}
+              />
+              <YAxis
+                tick={{ fill: '#64748B', fontSize: 10,
+                  fontFamily: 'JetBrains Mono' }}
+                axisLine={false} tickLine={false}
+                tickFormatter={v => `${v}m`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <ReferenceLine y={1.2} stroke="#EF4444"
+                strokeDasharray="4 4" strokeOpacity={0.5}
+                label={{ value: 'Alert 1.2m', fill: '#EF4444',
+                  fontSize: 9 }}
+              />
+              {keys.map((key, i) => (
+                <Area key={key} type="monotone" dataKey={key}
+                  stroke={COLORS[i]} strokeWidth={1.5}
+                  fill={`url(#g${i})`} dot={false}
+                  connectNulls
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+
+          {/* Legend + last values */}
+          <div style={{ display: 'flex', gap: 16, marginTop: 10,
+            flexWrap: 'wrap', alignItems: 'center',
+            justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {stations.map((st, i) => {
+                const lastVal = st.readings[st.readings.length - 1]?.value;
+                return (
+                  <div key={st.station_id} style={{ display: 'flex',
+                    alignItems: 'center', gap: 5,
+                    fontSize: 11, color: '#64748B' }}>
+                    <div style={{ width: 16, height: 2,
+                      background: COLORS[i], borderRadius: 2 }} />
+                    <span>{st.river || st.label}</span>
+                    {lastVal !== undefined && (
+                      <span style={{ color: COLORS[i],
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 10, fontWeight: 600 }}>
+                        {lastVal?.toFixed(2)}m
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+              <div style={{ display: 'flex', alignItems: 'center',
+                gap: 5, fontSize: 11, color: '#64748B' }}>
+                <div style={{ width: 16, height: 2,
+                  background: '#EF4444', borderRadius: 2,
+                  opacity: 0.5 }} />
+                Alert threshold
+              </div>
+            </div>
+            <span style={{ fontSize: 10, color: '#64748B',
+              fontFamily: 'JetBrains Mono, monospace' }}>
+              {chartData.length} data points · Live DB
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
