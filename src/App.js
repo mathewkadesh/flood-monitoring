@@ -1,23 +1,38 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import StatsRow from './components/StatsRow';
+import StationTable from './components/StationTable';
+import WaterLevelChart from './components/WaterLevelChart';
+import PipelineLog from './components/PipelineLog';
 
 function App() {
+  const [stats] = useState({
+    totalStations: 3694,
+    totalReadings: 2308750,
+    activeAlerts: 34,
+    pipelineRuns: 1
+  });
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="app">
+      <header className="topbar">
+        <div className="logo">
+          <div className="logo-dot">EA</div>
+          <span>Flood Monitor <span className="sub">· Pipeline Dashboard</span></span>
+        </div>
+        <div className="status-pill">
+          <div className="pulse"></div>
+          PIPELINE LIVE
+        </div>
       </header>
+      <main className="main">
+        <StatsRow stats={stats} />
+        <div className="grid-2">
+          <WaterLevelChart />
+          <PipelineLog />
+        </div>
+        <StationTable />
+      </main>
     </div>
   );
 }
