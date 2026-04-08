@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiCheckCircle, FiAlertCircle, FiRefreshCw, FiClock, FiAlertTriangle } from 'react-icons/fi';
+import { FiCheckCircle, FiAlertCircle, FiRefreshCw, FiClock, FiAlertTriangle, FiX } from 'react-icons/fi';
 
 const severityColor = {
   1: '#EF4444',
@@ -20,6 +20,7 @@ function PipelineLog() {
   const [warnings, setWarnings] = useState([]);
   const [tab, setTab]           = useState('pipeline');
   const [loading, setLoading]   = useState(true);
+  const [selectedWarning, setSelectedWarning] = useState(null);
 
   useEffect(() => {
     // Fetch real pipeline runs
@@ -34,6 +35,17 @@ function PipelineLog() {
       .then(setWarnings)
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!selectedWarning) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setSelectedWarning(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedWarning]);
 
   const getIcon = (run) => {
     if (run.stations_err > 0) return <FiAlertCircle size={13}/>;
@@ -56,14 +68,13 @@ function PipelineLog() {
     <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
 
       {/* Tab Row */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+      <div className="panel-tabs" style={{ marginBottom: 14 }}>
         {[
           { key: 'pipeline', label: 'Pipeline Log', icon: <FiClock size={11}/> },
           { key: 'warnings', label: `Live Warnings ${warnings.length > 0 ? `(${warnings.length})` : ''}`,
             icon: <FiAlertTriangle size={11}/> },
         ].map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            display: 'flex', alignItems: 'center', gap: 5,
+          <button key={t.key} className="panel-tab" onClick={() => setTab(t.key)} style={{
             padding: '5px 12px', borderRadius: 7, border: '1px solid',
             borderColor: tab === t.key
               ? (t.key === 'warnings' ? 'rgba(239,68,68,0.35)' : 'rgba(0,168,107,0.35)')
@@ -78,7 +89,7 @@ function PipelineLog() {
             fontFamily: 'Inter, sans-serif', fontWeight: 500,
             transition: 'all 0.15s'
           }}>
-            {t.icon} {t.label}
+            {t.icon} <span className="panel-tab-label">{t.label}</span>
           </button>
         ))}
       </div>
@@ -131,7 +142,7 @@ function PipelineLog() {
               No active flood warnings
             </div>
           ) : warnings.map((w, i) => (
-            <div key={i} style={{
+            <button key={i} type="button" onClick={() => setSelectedWarning(w)} className="warning-alert-card" style={{
               padding: '10px 12px', marginBottom: 6,
               background: 'rgba(255,255,255,0.02)',
               border: `1px solid ${severityColor[w.severityLevel]}30`,
@@ -167,7 +178,7 @@ function PipelineLog() {
                   Raised: {w.timeRaised?.replace('T',' ').slice(0,16)}
                 </div>
               )}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -188,6 +199,64 @@ function PipelineLog() {
           {warnings.length} active warnings
         </span>
       </div>
+
+      {selectedWarning && (
+        <div className="warning-modal-backdrop" onClick={() => setSelectedWarning(null)}>
+          <div
+            className="warning-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="warning-modal-header">
+              <div>
+                <div className="warning-modal-title-row">
+                  <span
+                    className="warning-modal-badge"
+                    style={{
+                      color: severityColor[selectedWarning.severityLevel],
+                      background: `${severityColor[selectedWarning.severityLevel]}20`
+                    }}
+                  >
+                    {severityLabel[selectedWarning.severityLevel]}
+                  </span>
+                  <span className="warning-modal-county">{selectedWarning.county || 'Area unknown'}</span>
+                </div>
+                <h3 className="warning-modal-title">{selectedWarning.description}</h3>
+              </div>
+              <button
+                type="button"
+                className="warning-modal-close"
+                onClick={() => setSelectedWarning(null)}
+              >
+                <FiX size={16} />
+              </button>
+            </div>
+
+            <div className="warning-modal-grid">
+              <div className="warning-modal-field">
+                <span className="warning-modal-label">River / Sea</span>
+                <span className="warning-modal-value">{selectedWarning.river || 'Not provided'}</span>
+              </div>
+              <div className="warning-modal-field">
+                <span className="warning-modal-label">Raised</span>
+                <span className="warning-modal-value">{formatTime(selectedWarning.timeRaised)}</span>
+              </div>
+              <div className="warning-modal-field">
+                <span className="warning-modal-label">Severity Updated</span>
+                <span className="warning-modal-value">{formatTime(selectedWarning.timeSeverityChanged)}</span>
+              </div>
+              <div className="warning-modal-field">
+                <span className="warning-modal-label">Source</span>
+                <span className="warning-modal-value">Environment Agency API</span>
+              </div>
+            </div>
+
+            <div className="warning-modal-message">
+              <div className="warning-modal-label">Full Detail</div>
+              <p>{selectedWarning.message || selectedWarning.description}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

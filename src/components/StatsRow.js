@@ -19,7 +19,7 @@ function StatsRow({ stats }) {
           <div className="stat-icon"><FiAlertTriangle /></div>
         </div>
         <div className="stat-value">{stats.activeAlerts}</div>
-        <div className="stat-sub">6 escalated to severe</div>
+        <div className="stat-sub">{stats.severeAlerts || 0} escalated to severe</div>
       </div>
 
       <div className="stat-card red">

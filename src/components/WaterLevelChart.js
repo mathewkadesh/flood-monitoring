@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, ReferenceLine
+  ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea
 } from 'recharts';
-import { FiTrendingUp, FiDownload } from 'react-icons/fi';
+import { FiTrendingUp, FiDownload, FiAlertTriangle, FiActivity } from 'react-icons/fi';
 
 const COLORS = ['#00A86B', '#F59E0B', '#3B82F6'];
 
@@ -81,6 +81,35 @@ function WaterLevelChart() {
   };
 
   const keys = stations.map(s => s.river || s.label);
+  const stationSummaries = stations.map((st) => {
+    const series = st.readings || [];
+    const latest = series[series.length - 1]?.value;
+    const previous = series[series.length - 2]?.value;
+    const peak = Math.max(...series.map((point) => point.value ?? 0), 0);
+
+    return {
+      name: st.river || st.label,
+      latest,
+      previous,
+      peak,
+      delta: latest !== undefined && previous !== undefined
+        ? latest - previous
+        : null,
+    };
+  }).filter((item) => item.latest !== undefined);
+
+  const peakStation = stationSummaries.reduce((best, current) =>
+    !best || current.peak > best.peak ? current : best, null);
+  const risingStation = stationSummaries
+    .filter((item) => item.delta !== null)
+    .reduce((best, current) =>
+      !best || current.delta > best.delta ? current : best, null);
+  const stationsAboveThreshold = stationSummaries.filter((item) => item.latest >= 1.2).length;
+  const chartMax = Math.max(
+    1.2,
+    ...chartData.flatMap((entry) => keys.map((key) => entry[key] ?? 0))
+  );
+  const yDomainMax = Math.max(1.5, Math.ceil((chartMax + 0.15) * 10) / 10);
 
   const rangeOptions = [
     { key: '24h', label: '24h' },
@@ -90,8 +119,8 @@ function WaterLevelChart() {
 
   return (
     <div className="card">
-      <div style={{ display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start',
+        justifyContent: 'space-between', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
         <div className="card-title" style={{ marginBottom: 0 }}>
           <FiTrendingUp size={13} style={{ color: '#00A86B' }} />
           Water Level Trend
@@ -139,6 +168,36 @@ function WaterLevelChart() {
         </div>
       </div>
 
+      {!loading && chartData.length > 0 && (
+        <div className="chart-metrics">
+          <div className="chart-metric-card">
+            <span className="chart-metric-label">Peak in range</span>
+            <div className="chart-metric-value" style={{ color: '#00A86B' }}>
+              {peakStation ? `${peakStation.peak.toFixed(2)}m` : '—'}
+            </div>
+            <div className="chart-metric-sub">{peakStation?.name || 'No station data'}</div>
+          </div>
+
+          <div className="chart-metric-card">
+            <span className="chart-metric-label">Above alert threshold</span>
+            <div className="chart-metric-value" style={{ color: stationsAboveThreshold > 0 ? '#F59E0B' : '#3B82F6' }}>
+              {stationsAboveThreshold}
+            </div>
+            <div className="chart-metric-sub">Current stations over 1.2m</div>
+          </div>
+
+          <div className="chart-metric-card">
+            <span className="chart-metric-label">Fastest movement</span>
+            <div className="chart-metric-value" style={{ color: (risingStation?.delta ?? 0) > 0 ? '#EF4444' : '#3B82F6' }}>
+              {risingStation?.delta !== null && risingStation?.delta !== undefined
+                ? `${risingStation.delta > 0 ? '+' : ''}${risingStation.delta.toFixed(2)}m`
+                : '—'}
+            </div>
+            <div className="chart-metric-sub">{risingStation?.name || 'No delta available'}</div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div style={{ height: 200, display: 'flex', alignItems: 'center',
           justifyContent: 'center', color: '#64748B', fontSize: 12 }}>
@@ -151,18 +210,37 @@ function WaterLevelChart() {
         </div>
       ) : (
         <>
+          <div className="chart-signal-banner">
+            <div className="chart-signal-copy">
+              <FiAlertTriangle size={13} style={{ color: '#F59E0B' }} />
+              <span>
+                Alert threshold set at <strong>1.2m</strong>. Rising lines entering the amber zone need immediate review.
+              </span>
+            </div>
+            <div className="chart-signal-status">
+              <FiActivity size={12} />
+              <span>{stationsAboveThreshold} high-risk signals</span>
+            </div>
+          </div>
+
           <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={chartData}
+            <ComposedChart data={chartData}
               margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
               <defs>
                 {keys.map((key, i) => (
                   <linearGradient key={key} id={`g${i}`}
                     x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={COLORS[i]} stopOpacity={0.2}/>
+                    <stop offset="5%"  stopColor={COLORS[i]} stopOpacity={0.16}/>
                     <stop offset="95%" stopColor={COLORS[i]} stopOpacity={0}/>
                   </linearGradient>
                 ))}
               </defs>
+              <ReferenceArea
+                y1={1.2}
+                y2={yDomainMax}
+                fill="rgba(245,158,11,0.07)"
+                ifOverflow="extendDomain"
+              />
               <CartesianGrid strokeDasharray="3 3"
                 stroke="rgba(255,255,255,0.04)" />
               <XAxis
@@ -181,6 +259,7 @@ function WaterLevelChart() {
                 tick={{ fill: '#64748B', fontSize: 10,
                   fontFamily: 'JetBrains Mono' }}
                 axisLine={false} tickLine={false}
+                domain={[0, yDomainMax]}
                 tickFormatter={v => `${v}m`}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -190,26 +269,36 @@ function WaterLevelChart() {
                   fontSize: 9 }}
               />
               {keys.map((key, i) => (
-                <Area key={key} type="monotone" dataKey={key}
-                  stroke={COLORS[i]} strokeWidth={1.5}
+                <React.Fragment key={key}>
+                  <Area type="monotone" dataKey={key}
+                  stroke="none"
                   fill={`url(#g${i})`} dot={false}
                   connectNulls
-                />
+                  />
+                  <Line type="monotone" dataKey={key}
+                    stroke={COLORS[i]} strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, strokeWidth: 0, fill: COLORS[i] }}
+                    connectNulls
+                  />
+                </React.Fragment>
               ))}
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
 
           {/* Legend + last values */}
-          <div style={{ display: 'flex', gap: 16, marginTop: 10,
+          <div style={{ display: 'flex', gap: 16, marginTop: 14,
             flexWrap: 'wrap', alignItems: 'center',
             justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            <div className="chart-legend-row">
               {stations.map((st, i) => {
                 const lastVal = st.readings[st.readings.length - 1]?.value;
+                const prevVal = st.readings[st.readings.length - 2]?.value;
+                const delta = lastVal !== undefined && prevVal !== undefined
+                  ? lastVal - prevVal
+                  : null;
                 return (
-                  <div key={st.station_id} style={{ display: 'flex',
-                    alignItems: 'center', gap: 5,
-                    fontSize: 11, color: '#64748B' }}>
+                  <div key={st.station_id} className="chart-legend-pill">
                     <div style={{ width: 16, height: 2,
                       background: COLORS[i], borderRadius: 2 }} />
                     <span>{st.river || st.label}</span>
@@ -220,11 +309,20 @@ function WaterLevelChart() {
                         {lastVal?.toFixed(2)}m
                       </span>
                     )}
+                    {delta !== null && (
+                      <span style={{
+                        color: delta > 0 ? '#EF4444' : '#3B82F6',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 10,
+                        fontWeight: 600
+                      }}>
+                        {delta > 0 ? '+' : ''}{delta.toFixed(2)}
+                      </span>
+                    )}
                   </div>
                 );
               })}
-              <div style={{ display: 'flex', alignItems: 'center',
-                gap: 5, fontSize: 11, color: '#64748B' }}>
+              <div className="chart-legend-pill">
                 <div style={{ width: 16, height: 2,
                   background: '#EF4444', borderRadius: 2,
                   opacity: 0.5 }} />

@@ -15,6 +15,31 @@ def get_conn():
     conn.row_factory = sqlite3.Row
     return conn
 
+def fetch_live_warnings(limit=20):
+    try:
+        url = f"{EA_BASE}/id/floods?min-severity=3&_limit={limit}"
+        req = urllib.request.Request(url, headers={"User-Agent": "flood-monitor/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as r:
+            data  = json.loads(r.read())
+            items = data.get("items", [])
+
+        result = []
+        for w in items:
+            result.append({
+                "id":          w.get("floodAreaID", ""),
+                "description": w.get("description", ""),
+                "severity":    w.get("severity", ""),
+                "severityLevel": w.get("severityLevel", 4),
+                "county":      w.get("floodArea", {}).get("county", ""),
+                "river":       w.get("floodArea", {}).get("riverOrSea", ""),
+                "message":     w.get("message", ""),
+                "timeRaised":  w.get("timeRaised", ""),
+                "timeSeverityChanged": w.get("timeSeverityChanged", ""),
+            })
+        return result
+    except Exception:
+        return []
+
 # ── Stats ──────────────────────────────────────────────────────────
 @app.route("/api/stats")
 def stats():
@@ -48,35 +73,134 @@ def stats():
 # ── Live Flood Warnings ────────────────────────────────────────────
 @app.route("/api/warnings")
 def warnings():
-    try:
-        url = f"{EA_BASE}/id/floods?min-severity=3&_limit=20"
-        req = urllib.request.Request(url, headers={"User-Agent": "flood-monitor/1.0"})
-        with urllib.request.urlopen(req, timeout=5) as r:
-            data  = json.loads(r.read())
-            items = data.get("items", [])
-        result = []
-        for w in items:
-            result.append({
-                "id":          w.get("floodAreaID", ""),
-                "description": w.get("description", ""),
-                "severity":    w.get("severity", ""),
-                "severityLevel": w.get("severityLevel", 4),
-                "county":      w.get("floodArea", {}).get("county", ""),
-                "river":       w.get("floodArea", {}).get("riverOrSea", ""),
-                "message":     w.get("message", ""),
-                "timeRaised":  w.get("timeRaised", ""),
-                "timeSeverityChanged": w.get("timeSeverityChanged", ""),
-            })
-        return jsonify(result)
-    except Exception as e:
-        return jsonify([])
+    return jsonify(fetch_live_warnings(limit=20))
+
+# ── Top 5 insights ────────────────────────────────────────────────
+@app.route("/api/top5")
+def top5():
+    conn = get_conn()
+
+    highest_levels = conn.execute("""
+        SELECT s.station_id, s.label, s.river, s.town, r.value AS level
+        FROM stations s
+        JOIN readings r ON r.id = (
+            SELECT id
+            FROM readings
+            WHERE station_id = s.station_id
+            AND value IS NOT NULL
+            AND value > -10
+            AND value <= 50
+            ORDER BY timestamp DESC
+            LIMIT 1
+        )
+        ORDER BY r.value DESC
+        LIMIT 5
+    """).fetchall()
+
+    severe_stations = conn.execute("""
+        SELECT s.station_id, s.label, s.river, s.town, r.value AS level
+        FROM stations s
+        JOIN readings r ON r.id = (
+            SELECT id
+            FROM readings
+            WHERE station_id = s.station_id
+            AND value IS NOT NULL
+            AND value >= 1.5
+            AND value <= 50
+            ORDER BY timestamp DESC
+            LIMIT 1
+        )
+        ORDER BY r.value DESC
+        LIMIT 5
+    """).fetchall()
+
+    most_active = conn.execute("""
+        SELECT s.station_id, s.label, s.river, s.town, COUNT(r.id) AS reading_count
+        FROM stations s
+        JOIN readings r ON r.station_id = s.station_id
+        GROUP BY s.station_id, s.label, s.river, s.town
+        ORDER BY reading_count DESC
+        LIMIT 5
+    """).fetchall()
+
+    top_rivers = conn.execute("""
+        SELECT
+            s.river,
+            COUNT(DISTINCT s.station_id) AS station_count,
+            ROUND(AVG(latest.level), 3) AS avg_level
+        FROM stations s
+        JOIN (
+            SELECT r1.station_id, r1.value AS level
+            FROM readings r1
+            JOIN (
+                SELECT station_id, MAX(timestamp) AS latest_ts
+                FROM readings
+                WHERE value IS NOT NULL
+                AND value > -10
+                AND value <= 50
+                GROUP BY station_id
+            ) latest
+              ON latest.station_id = r1.station_id
+             AND latest.latest_ts = r1.timestamp
+        ) latest ON latest.station_id = s.station_id
+        WHERE s.river IS NOT NULL
+        AND s.river != ''
+        GROUP BY s.river
+        ORDER BY station_count DESC, avg_level DESC
+        LIMIT 5
+    """).fetchall()
+
+    conn.close()
+
+    return jsonify({
+        "highest_levels": [{
+            "station_id": r["station_id"],
+            "label": r["label"] or r["station_id"],
+            "river": r["river"] or "",
+            "town": r["town"] or "",
+            "level": round(r["level"], 3) if r["level"] is not None else None,
+        } for r in highest_levels],
+        "severe_stations": [{
+            "station_id": r["station_id"],
+            "label": r["label"] or r["station_id"],
+            "river": r["river"] or "",
+            "town": r["town"] or "",
+            "level": round(r["level"], 3) if r["level"] is not None else None,
+        } for r in severe_stations],
+        "most_active": [{
+            "station_id": r["station_id"],
+            "label": r["label"] or r["station_id"],
+            "river": r["river"] or "",
+            "town": r["town"] or "",
+            "reading_count": r["reading_count"],
+        } for r in most_active],
+        "top_rivers": [{
+            "river": r["river"] or "Unknown",
+            "station_count": r["station_count"],
+            "avg_level": r["avg_level"],
+        } for r in top_rivers],
+        "ea_warnings": fetch_live_warnings(limit=5),
+    })
 
 # ── Real chart data — top 3 stations by readings ───────────────────
 @app.route("/api/chart/top-stations")
 def chart_top_stations():
-    conn = get_conn()
+    conn        = get_conn()
+    range_param = request.args.get("range", "7d")
 
-    # Get top 3 stations by reading count with real river names
+    if range_param == "24h":
+        hours_back  = 24
+        group_by    = "strftime('%Y-%m-%dT%H', timestamp)"
+        label_fmt   = "strftime('%H:00', timestamp)"
+    elif range_param == "30d":
+        hours_back  = 30 * 24
+        group_by    = "DATE(timestamp)"
+        label_fmt   = "strftime('%m-%d', timestamp)"
+    else:
+        hours_back  = 7 * 24
+        group_by    = "DATE(timestamp)"
+        label_fmt   = "strftime('%m-%d', timestamp)"
+
     top = conn.execute("""
         SELECT s.station_id, s.label, s.river,
                COUNT(r.id) as cnt
@@ -88,23 +212,28 @@ def chart_top_stations():
         LIMIT 3
     """).fetchall()
 
+    from datetime import datetime, timedelta, timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours_back)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     result = []
     for st in top:
-        # Get daily average for last 7 days
-        rows = conn.execute("""
-            SELECT DATE(timestamp) as day, ROUND(AVG(value), 3) as avg_level
+        rows = conn.execute(f"""
+            SELECT {label_fmt} as label,
+                   ROUND(AVG(value), 3) as avg_level
             FROM readings
             WHERE station_id = ?
-              AND timestamp >= DATE('now', '-7 days')
-            GROUP BY DATE(timestamp)
-            ORDER BY day ASC
-        """, (st["station_id"],)).fetchall()
+              AND timestamp >= ?
+              AND value > -10
+              AND value <= 50
+            GROUP BY {group_by}
+            ORDER BY {group_by} ASC
+        """, (st["station_id"], cutoff)).fetchall()
 
         result.append({
             "station_id": st["station_id"],
             "label":      st["label"] or st["station_id"],
             "river":      st["river"],
-            "readings":   [{"day": r["day"], "value": r["avg_level"]} for r in rows]
+            "readings":   [{"day": r["label"], "value": r["avg_level"]} for r in rows]
         })
 
     conn.close()
@@ -150,9 +279,10 @@ def get_stations():
     conn.close()
 
     def get_status(level):
-        if level is None: return "offline"
-        if level >= 1.5:  return "severe"
-        if level >= 1.0:  return "alert"
+        if level is None:   return "offline"
+        if level > 50:      return "offline"   # likely mAOD datum, not comparable
+        if level >= 1.5:    return "severe"
+        if level >= 1.0:    return "alert"
         return "normal"
 
     return jsonify({
