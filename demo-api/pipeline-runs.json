@@ -1,0 +1,11 @@
+[
+  {
+    "finished_at": "2026-04-08T11:52:01.805461+00:00",
+    "rows_inserted": 2418357,
+    "run_id": 1,
+    "run_type": "full",
+    "started_at": "2026-04-08T11:38:41.116797+00:00",
+    "stations_err": 1324,
+    "stations_ok": 4146
+  }
+]

@@ -1,0 +1,137 @@
+[
+  {
+    "alert_count": 0,
+    "avg_level": 1.774,
+    "normal_count": 8,
+    "peak_level": 6.819,
+    "river": "River Thames",
+    "severe_count": 9,
+    "station_count": 20
+  },
+  {
+    "alert_count": 1,
+    "avg_level": 1.048,
+    "normal_count": 15,
+    "peak_level": 6.043,
+    "river": "River Avon",
+    "severe_count": 3,
+    "station_count": 19
+  },
+  {
+    "alert_count": 1,
+    "avg_level": 0.679,
+    "normal_count": 11,
+    "peak_level": 2.362,
+    "river": "River Great Ouse",
+    "severe_count": 3,
+    "station_count": 16
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 2.085,
+    "normal_count": 4,
+    "peak_level": 7.201,
+    "river": "River Derwent",
+    "severe_count": 4,
+    "station_count": 10
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.558,
+    "normal_count": 6,
+    "peak_level": 1.182,
+    "river": "River Test",
+    "severe_count": 0,
+    "station_count": 9
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.444,
+    "normal_count": 9,
+    "peak_level": 0.829,
+    "river": "River Stour",
+    "severe_count": 0,
+    "station_count": 9
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.981,
+    "normal_count": 7,
+    "peak_level": 2.782,
+    "river": "River Severn",
+    "severe_count": 1,
+    "station_count": 9
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 2.759,
+    "normal_count": 3,
+    "peak_level": 6.56,
+    "river": "River Ouse",
+    "severe_count": 6,
+    "station_count": 9
+  },
+  {
+    "alert_count": 1,
+    "avg_level": 0.563,
+    "normal_count": 6,
+    "peak_level": 1.459,
+    "river": "River Calder",
+    "severe_count": 0,
+    "station_count": 9
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.506,
+    "normal_count": 6,
+    "peak_level": 1.77,
+    "river": "River Wey",
+    "severe_count": 1,
+    "station_count": 8
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.45,
+    "normal_count": 8,
+    "peak_level": 1.196,
+    "river": "River Tame",
+    "severe_count": 0,
+    "station_count": 8
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.243,
+    "normal_count": 6,
+    "peak_level": 0.332,
+    "river": "River Rother",
+    "severe_count": 0,
+    "station_count": 8
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.428,
+    "normal_count": 8,
+    "peak_level": 0.8,
+    "river": "River Dove",
+    "severe_count": 0,
+    "station_count": 8
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 1.313,
+    "normal_count": 7,
+    "peak_level": 7.496,
+    "river": "River Colne",
+    "severe_count": 1,
+    "station_count": 8
+  },
+  {
+    "alert_count": 0,
+    "avg_level": 0.352,
+    "normal_count": 5,
+    "peak_level": 0.658,
+    "river": "River Aire",
+    "severe_count": 0,
+    "station_count": 8
+  }
+]

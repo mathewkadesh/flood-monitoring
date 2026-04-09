@@ -1,0 +1,141 @@
+{
+  "ea_warnings": [],
+  "highest_levels": [
+    {
+      "label": "RAUNDS NORTH STREET BRIDGE WITS",
+      "level": 49.931,
+      "river": "",
+      "station_id": "E7310",
+      "town": ""
+    },
+    {
+      "label": "AVON WEIR",
+      "level": 49.356,
+      "river": "",
+      "station_id": "531166",
+      "town": ""
+    },
+    {
+      "label": "RIVER THAMES AT WINDSOR",
+      "level": 49.351,
+      "river": "",
+      "station_id": "6c72f76a-b76c-4a28-8701-71cdca25c0f5",
+      "town": ""
+    },
+    {
+      "label": "AVON MILL",
+      "level": 49.308,
+      "river": "",
+      "station_id": "531168",
+      "town": ""
+    },
+    {
+      "label": "Reading Kingsclere STW",
+      "level": 49.113,
+      "river": "",
+      "station_id": "SU56_218",
+      "town": ""
+    }
+  ],
+  "most_active": [
+    {
+      "label": "Silvertown and Tower Pier",
+      "reading_count": 10000,
+      "river": "",
+      "station_id": "DIFF_TB3_TB1",
+      "town": ""
+    },
+    {
+      "label": "Silvertown and Charlton",
+      "reading_count": 9760,
+      "river": "",
+      "station_id": "DIFF_TB2_TB1",
+      "town": ""
+    },
+    {
+      "label": "Erith TG and Tower Pier",
+      "reading_count": 8744,
+      "river": "",
+      "station_id": "DIFF_TB3_TB9",
+      "town": ""
+    },
+    {
+      "label": "Erith TG and Charlton",
+      "reading_count": 8638,
+      "river": "",
+      "station_id": "DIFF_TB2_TB9",
+      "town": ""
+    },
+    {
+      "label": "Stogumber Escott Lane",
+      "reading_count": 2014,
+      "river": "Doniford Stream",
+      "station_id": "51129",
+      "town": "Williton"
+    }
+  ],
+  "severe_stations": [
+    {
+      "label": "RAUNDS NORTH STREET BRIDGE WITS",
+      "level": 49.931,
+      "river": "",
+      "station_id": "E7310",
+      "town": ""
+    },
+    {
+      "label": "AVON WEIR",
+      "level": 49.356,
+      "river": "",
+      "station_id": "531166",
+      "town": ""
+    },
+    {
+      "label": "RIVER THAMES AT WINDSOR",
+      "level": 49.351,
+      "river": "",
+      "station_id": "6c72f76a-b76c-4a28-8701-71cdca25c0f5",
+      "town": ""
+    },
+    {
+      "label": "AVON MILL",
+      "level": 49.308,
+      "river": "",
+      "station_id": "531168",
+      "town": ""
+    },
+    {
+      "label": "Reading Kingsclere STW",
+      "level": 49.113,
+      "river": "",
+      "station_id": "SU56_218",
+      "town": ""
+    }
+  ],
+  "top_rivers": [
+    {
+      "avg_level": 0.213,
+      "river": "Tide",
+      "station_count": 21
+    },
+    {
+      "avg_level": 3.82,
+      "river": "River Thames",
+      "station_count": 20
+    },
+    {
+      "avg_level": 1.048,
+      "river": "River Avon",
+      "station_count": 19
+    },
+    {
+      "avg_level": 2.455,
+      "river": "River Great Ouse",
+      "station_count": 16
+    },
+    {
+      "avg_level": 7.23,
+      "river": "River Derwent",
+      "station_count": 10
+    }
+  ]
+}

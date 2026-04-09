@@ -1,0 +1,146 @@
+[
+  {
+    "active_stations": 3030,
+    "avg_level": 0.704,
+    "hour": "00",
+    "reading_count": 84155
+  },
+  {
+    "active_stations": 3029,
+    "avg_level": 0.692,
+    "hour": "01",
+    "reading_count": 84147
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.68,
+    "hour": "02",
+    "reading_count": 84077
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.668,
+    "hour": "03",
+    "reading_count": 84102
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.664,
+    "hour": "04",
+    "reading_count": 84043
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.671,
+    "hour": "05",
+    "reading_count": 83914
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.689,
+    "hour": "06",
+    "reading_count": 83699
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.701,
+    "hour": "07",
+    "reading_count": 83220
+  },
+  {
+    "active_stations": 3028,
+    "avg_level": 0.7,
+    "hour": "08",
+    "reading_count": 83081
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.701,
+    "hour": "09",
+    "reading_count": 82747
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.704,
+    "hour": "10",
+    "reading_count": 82453
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.715,
+    "hour": "11",
+    "reading_count": 79027
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.702,
+    "hour": "12",
+    "reading_count": 84061
+  },
+  {
+    "active_stations": 3028,
+    "avg_level": 0.688,
+    "hour": "13",
+    "reading_count": 84100
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.677,
+    "hour": "14",
+    "reading_count": 84063
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.668,
+    "hour": "15",
+    "reading_count": 84083
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.67,
+    "hour": "16",
+    "reading_count": 84220
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.679,
+    "hour": "17",
+    "reading_count": 84114
+  },
+  {
+    "active_stations": 3030,
+    "avg_level": 0.698,
+    "hour": "18",
+    "reading_count": 84072
+  },
+  {
+    "active_stations": 3029,
+    "avg_level": 0.71,
+    "hour": "19",
+    "reading_count": 83932
+  },
+  {
+    "active_stations": 3028,
+    "avg_level": 0.711,
+    "hour": "20",
+    "reading_count": 83732
+  },
+  {
+    "active_stations": 3028,
+    "avg_level": 0.713,
+    "hour": "21",
+    "reading_count": 83788
+  },
+  {
+    "active_stations": 3029,
+    "avg_level": 0.713,
+    "hour": "22",
+    "reading_count": 83947
+  },
+  {
+    "active_stations": 3031,
+    "avg_level": 0.713,
+    "hour": "23",
+    "reading_count": 84093
+  }
+]
