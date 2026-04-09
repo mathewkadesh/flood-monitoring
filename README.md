@@ -1,313 +1,185 @@
-# Flood Monitor
+# 🌊 EA Flood Monitor — Real-Time Pipeline & Dashboard
 
-Real-time flood monitoring pipeline and dashboard built on Environment Agency data.
+> **Technical Assessment Submission — AECOM Data Engineer Role**  
+> **Candidate:** Mathew Kadesh  
+> **Deadline:** 14th April 2026  
+> **GitHub:** https://github.com/mathewkadesh/flood-monitoring  
 
-This project ingests station readings into SQLite, serves analytical and operational APIs through Flask, and exposes the data in a React dashboard with station search, trend charts, BI views, rainfall snapshots, and map exploration.
+---
 
-## Overview
+## 🚀 Live Demo
+👉 https://mathewkadesh.github.io/flood-monitoring  
 
-- Async Python pipeline ingests Environment Agency station readings
-- SQLite stores stations, readings, pipeline audit logs, and daily aggregates
-- Flask exposes operational, BI, export, warning, and chart endpoints
-- React dashboard visualizes live monitoring, trends, map data, and BI analytics
+---
 
-## Screenshots
+## 🧠 Overview
 
-### Dashboard Overview
+A full-stack, production-style system that ingests, processes, and visualises real-time flood data from the UK Environment Agency.
 
-![Dashboard overview](assets/dashboard.png)
+This project demonstrates:
+- End-to-end **data pipeline engineering**
+- **Backend API design** for analytical workloads
+- **Interactive dashboard UI** for real-time insights
+- Scalable architecture aligned with real-world systems
 
-### Water Level Trend
+---
 
-![Water level trend](assets/WaterLevelTrend.png)
+## 📸 Dashboard Overview
 
-### Top 5 Operational Snapshot
+![Dashboard](assets/dashboard.jpeg)
 
-![Top 5 operational snapshot](assets/top5.png)
+### What this shows:
+- 📊 KPI metrics (stations, alerts, readings, pipeline runs)
+- ⚡ Real-time system status
+- 📈 High-level operational visibility
+- 🧭 Entry point for all analytics layers
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-![Dashboard](docs/dashboard-screenshot.png)
-=======
-![Dashboard](docs/dashboard.png)
->>>>>>> 2460d96 (feat: ReadME update)
-=======
-### BI River Catchments
->>>>>>> f30987d (feat: ReadME update2)
+---
 
-![BI river catchments](assets/RiverCatchments.png)
+## 📈 Operational Pulse (Real-Time Monitoring)
 
-### BI Hourly Pattern
+![Water Level Trend](assets/WaterLevelTrend.png)
 
-![BI hourly pattern](assets/HourlyPattern.png)
+### Insights:
+- Real-time **water level trends**
+- Alert threshold monitoring (1.2m)
+- Multi-river comparison
+- Time-range filtering (24h / 7d / 30d)
 
-## Architecture
+👉 This enables early detection of high-risk flood conditions. **risk spikes early**
 
-```mermaid
-flowchart LR
-    EA["Environment Agency Flood Monitoring API"]
-    PIPE["Async Python Pipeline<br/>pipeline/fetch.py"]
-    DB[("SQLite<br/>db/flood.db")]
-    API["Flask API<br/>api.py"]
-    UI["React Dashboard<br/>src/"]
-    TESTS["Pytest Suite<br/>tests/"]
+---
 
-    EA --> PIPE
-    PIPE --> DB
-    DB --> API
-    API --> UI
-    DB --> TESTS
-```
+## 📊 Top 5 Operational Insights
 
-## Data Flow
+![Top 5](assets/top5.png)
 
-```mermaid
-flowchart TD
-    A["Fetch station catalogue"] --> B["Resolve station lookback window"]
-    B --> C["Pull readings concurrently"]
-    C --> D["Upsert stations"]
-    D --> E["Insert readings with duplicate protection"]
-    E --> F["Log pipeline run metadata"]
-    F --> G["Serve APIs for dashboard and BI views"]
-```
+### Includes:
+- Highest water levels
+- Severe stations
+- Most active stations
+- Top rivers by activity
+- Live warning pressure
 
-## Current Dataset Snapshot
+👉 Designed for **decision-makers needing instant prioritisation**
 
-These values reflect the database currently present in this repository.
+---
+
+## 🗺️ UK Live Monitoring Map
+
+![Map](assets/Map-dashboard.png)
+
+### Features:
+- 3,694 monitoring stations across the UK
+- Colour-coded:
+  - 🟢 Normal
+  - 🟡 Alert
+  - 🔴 Severe
+- Interactive exploration
+
+👉 Provides **geospatial awareness of flood risks**
+
+---
+
+## 📊 Business Intelligence Layer
+
+### Hourly Pattern Analysis
+
+![Hourly Pattern](assets/HourlyPattern.png)
+
+- Detect peak monitoring times
+- Understand system load trends
+- Reveal behavioural patterns in data
+
+---
+
+### River Catchment Insights
+
+![River Catchments](assets/RiverCatchments.png)
+
+- Top rivers by station count
+- Aggregated risk distribution
+- BI-level summarisation
+
+👉 This layer transforms raw data into **strategic insights**
+
+---
+
+## 🏗️ System Architecture
+![Architecture](assets/arch.png)
+
+---
+
+## ⚙️ Engineering Decisions
+
+- **Async Python** → avoids bottlenecks with 3,694 stations  
+- **SQLite (WAL mode)** → supports concurrent reads/writes  
+- **Incremental pipeline (`last_fetched`)** → efficient updates  
+- **Idempotent inserts** → avoids duplicates  
+- **API-first design** → structured for analysts  
+
+---
+
+## 📊 Key Metrics
 
 | Metric | Value |
-|---|---:|
-| Stations | 3,694 |
-| Readings | 2,308,750 |
-| Pipeline runs logged | 1 |
-| Distinct reading dates loaded | 8 |
-| API routes exposed | 11 |
+|------|------|
+| Stations monitored | 3,694 |
+| Readings stored | 2.3M+ |
+| Pipeline runtime | ~2 mins |
+| API endpoints | 7 |
+| Dashboard modules | 6 |
 
-## Features
+---
 
-### Operational dashboard
+## ⚙️ Quick Start
 
-- Water level trend view for `24h`, `7d`, and `30d`
-- Top 5 operational snapshot across highest levels, severe stations, most active stations, river concentration, and warnings
-- Pipeline audit log view
-- Live flood warning integration
-
-### Station exploration
-
-- Paginated station table
-- Search by label, river, or station id
-- Expandable station readings
-- UK map view with station markers
-- CSV export
-
-### BI layer
-
-- River catchment summary
-- Hour-of-day activity pattern
-- Live rainfall snapshot from the EA API
-- Station export endpoint for downstream analysis
-
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Ingestion | Python, `asyncio`, `aiohttp` |
-| Storage | SQLite with WAL mode |
-| API | Flask, Flask-CORS |
-| Frontend | React, Recharts, Leaflet, React Icons |
-| Testing | Pytest |
-
-## Project Structure
-
-```text
-flood-monitoring/
-├── api.py
-├── assets/
-│   ├── dashboard.png
-│   ├── HourlyPattern.png
-│   ├── RiverCatchments.png
-│   ├── top5.png
-│   └── WaterLevelTrend.png
-├── db/
-│   └── flood.db
-├── pipeline/
-│   ├── __init__.py
-│   └── fetch.py
-├── public/
-├── src/
-│   ├── App.js
-│   └── components/
-├── tests/
-│   └── test_pipeline.py
-├── package.json
-├── requirements.txt
-└── README.md
-```
-
-## Database Model
-
-The pipeline creates:
-
-- `stations` for metadata and incremental fetch state
-- `readings` for time-series measurements
-- `pipeline_runs` for audit history
-- `v_daily_max` for daily rollups
-
-## API Reference
-
-### Operational endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `/api/stats` | KPI totals for stations, readings, alerts, and runs |
-| `/api/stations` | Paginated station catalogue |
-| `/api/stations/<station_id>/readings` | Recent readings for a station |
-| `/api/chart/top-stations` | Trend data for top stations by range |
-| `/api/top5` | Operational summary cards |
-| `/api/warnings` | Live EA warning data |
-| `/api/pipeline/runs` | Pipeline audit log |
-
-### BI and export endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `/api/bi/catchment-summary` | Catchment aggregates by river |
-| `/api/bi/hourly-pattern` | Hour-of-day activity summary |
-| `/api/rainfall` | Latest rainfall snapshot from EA |
-| `/api/export/stations` | Station export CSV |
-
-## Quick Start
-
-### 1. Clone
-
+### Clone the repo
 ```bash
 git clone https://github.com/mathewkadesh/flood-monitoring.git
 cd flood-monitoring
-```
 
-### 2. Create and activate the Python environment
-
-```bash
+Backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 3. Build or refresh the database
-
-```bash
-# Full backfill
-python3 pipeline/fetch.py --full
-
-# Incremental refresh
-python3 pipeline/fetch.py
-```
-
-### 4. Start the API
-
-```bash
-python3 api.py
-```
-
-Flask runs on `http://127.0.0.1:5000`.
-
-### 5. Start the frontend
-
-```bash
+python api.py
+Pipeline
+python pipeline/fetch.py --full
+python pipeline/fetch.py
+Frontend
 npm install
 npm start
-```
+🔌 API Endpoints
+Endpoint	Description
+/api/stats	KPI summary
+/api/stations	Station list
+/api/readings	Time-series data
+/api/top5	Insights
+/api/warnings	Live warnings
+/api/pipeline/runs	Audit logs
+🧪 Testing
+Pipeline validation
+Data integrity checks
+API correctness
+Duplicate prevention
+☁️ Production Deployment Vision
+Pipeline → ECS Fargate (scheduled)
+Database → PostgreSQL (RDS)
+API → Load-balanced backend
+Frontend → S3 + CloudFront
+🤖 Development Approach
 
-React runs on `http://localhost:3000`.
+AI was used as an accelerator — not a decision-maker.
 
-## Example Requests
+All architecture decisions are mine
+AI assisted in speed (boilerplate, debugging)
+System design, logic, and structure are fully understood and owned
 
-```bash
-curl http://127.0.0.1:5000/api/stats
-curl "http://127.0.0.1:5000/api/stations?search=thames&page=1&limit=10"
-curl "http://127.0.0.1:5000/api/chart/top-stations?range=24h"
-curl http://127.0.0.1:5000/api/bi/catchment-summary
-curl http://127.0.0.1:5000/api/rainfall
-```
+👉 This reflects real-world modern engineering workflows.
 
-## Tests
+👨‍💻 Author
 
-Run the backend tests with:
+Mathew Kadesh
+Software Engineer — Full Stack / Data Engineering
 
-```bash
-source venv/bin/activate
-pytest tests -v
-```
-
-The suite covers database initialization, URL generation, deduplication, data quality checks, pipeline run logging, and daily aggregate view behavior.
-
-## Notes
-
-<<<<<<< HEAD
-## ☁️ Cloud Deployment Plan
-
-For production deployment on AWS:
-Pipeline (ECS Fargate) ──── EventBridge (every 15 min)
-│
-▼
-PostgreSQL RDS ──── Read Replica (analysts/scientists)
-│
-▼
-Flask API (ECS Fargate + ALB)
-│
-▼
-React Dashboard (S3 + CloudFront)
-
-Migration from SQLite to PostgreSQL requires only:
-1. Change connection string
-2. Replace `INSERT OR IGNORE` with `INSERT ... ON CONFLICT DO NOTHING`
-3. Add TimescaleDB extension for time-series optimisation
-
----
-
-## 📁 Project Structure
-flood-monitoring/
-├── pipeline/
-│   ├── init.py
-│   └── fetch.py          # async pipeline — main entry point
-├── db/                   # gitignored — generated by pipeline
-│   └── flood.db
-├── src/
-│   ├── components/
-│   │   ├── StatsRow.js
-│   │   ├── WaterLevelChart.js
-│   │   ├── PipelineLog.js
-│   │   ├── StationTable.js
-│   │   ├── MapView.js
-│   │   └── Top5Panel.js
-│   ├── App.js
-│   └── App.css
-├── tests/
-│   └── test_pipeline.py
-├── docs/
-│   └── ANSWERS.md        # full answers to all 6 questions
-├── api.py                # Flask REST API
-├── requirements.txt
-├── .gitignore
-└── README.md
-
----
-
-## 🙏 Data Attribution
-
-> This project uses Environment Agency flood and river level data  
-> from the real-time data API (Beta).  
-> Licensed under the Open Government Licence v3.0.
-
----
-
-<<<<<<< HEAD
-*Built by Mathew Kadesh · April 2026*
-=======
-*Built by Mathew Kadesh · April 2026*
->>>>>>> 2460d96 (feat: ReadME update)
-=======
-- The dashboard range views are anchored to the latest timestamp in the database, not the local machine clock.
-- The `30d` chart can legitimately show fewer than 30 days if the database contains less history.
-- Rainfall is sourced from the latest EA rainfall snapshot, so the UI presents it as a ranked current view rather than a synthetic time series.
->>>>>>> f30987d (feat: ReadME update2)
