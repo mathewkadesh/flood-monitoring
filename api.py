@@ -329,3 +329,91 @@ def pipeline_runs():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
+@app.route("/api/bi/catchment-summary")
+def catchment_summary():
+    conn = get_conn()
+    rows = conn.execute("""
+        SELECT s.river,
+               COUNT(DISTINCT s.station_id) AS station_count,
+               ROUND(AVG(CASE WHEN r.value > 0 AND r.value <= 10 THEN r.value END), 3) AS avg_level,
+               ROUND(MAX(CASE WHEN r.value > 0 AND r.value <= 10 THEN r.value END), 3) AS peak_level,
+               SUM(CASE WHEN r.value >= 1.5 AND r.value <= 10 THEN 1 ELSE 0 END) AS severe_count,
+               SUM(CASE WHEN r.value >= 1.2 AND r.value <  1.5 THEN 1 ELSE 0 END) AS alert_count,
+               SUM(CASE WHEN r.value >= 0   AND r.value <  1.2 THEN 1 ELSE 0 END) AS normal_count
+        FROM stations s
+        LEFT JOIN readings r ON r.id = (
+            SELECT id FROM readings WHERE station_id = s.station_id
+            ORDER BY timestamp DESC LIMIT 1)
+        WHERE s.river IS NOT NULL AND s.river != ''
+          AND s.river NOT IN ('Groundwater Level','Tide')
+        GROUP BY s.river
+        ORDER BY station_count DESC LIMIT 15
+    """).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+@app.route("/api/bi/hourly-pattern")
+def hourly_pattern():
+    conn = get_conn()
+    rows = conn.execute("""
+        SELECT strftime('%H', timestamp) AS hour,
+               COUNT(*) AS reading_count,
+               ROUND(AVG(value), 3) AS avg_level,
+               COUNT(DISTINCT station_id) AS active_stations
+        FROM readings
+        WHERE value > -10 AND value <= 10
+        GROUP BY strftime('%H', timestamp)
+        ORDER BY hour ASC
+    """).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+@app.route("/api/rainfall")
+def rainfall():
+    try:
+        rain_url = "http://environment.data.gov.uk/flood-monitoring/data/readings?parameter=rainfall&_sorted&_limit=100&_view=full"
+        req = urllib.request.Request(rain_url, headers={"User-Agent": "flood-monitor/1.0"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data  = json.loads(r.read())
+            items = data.get("items", [])
+        result = []
+        for item in items:
+            measure = item.get("measure", {})
+            station = measure.get("station", {}) if isinstance(measure, dict) else {}
+            val     = item.get("value")
+            dt      = item.get("dateTime", "")
+            label   = station.get("label", "") if isinstance(station, dict) else ""
+            town    = station.get("town", "") if isinstance(station, dict) else ""
+            if val is not None and dt:
+                result.append({
+                    "dateTime": dt,
+                    "value":    round(float(val), 3),
+                    "station":  label,
+                    "town":     town,
+                })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify([])
+
+@app.route("/api/export/stations")
+def export_stations():
+    from flask import Response
+    conn = get_conn()
+    rows = conn.execute("""
+        SELECT s.station_id, s.label, s.river, s.town, s.lat, s.lon, s.unit,
+               r.value as latest_level, r.timestamp as latest_reading,
+               COUNT(r2.id) as reading_count
+        FROM stations s
+        LEFT JOIN readings r ON r.id = (
+            SELECT id FROM readings WHERE station_id = s.station_id
+            ORDER BY timestamp DESC LIMIT 1)
+        LEFT JOIN readings r2 ON r2.station_id = s.station_id
+        GROUP BY s.station_id ORDER BY s.label
+    """).fetchall()
+    conn.close()
+    lines = ["station_id,label,river,town,lat,lon,unit,latest_level,latest_reading,reading_count"]
+    for r in rows:
+        lines.append(f"{r['station_id']},{r['label'] or ''},{r['river'] or ''},{r['town'] or ''},{r['lat'] or ''},{r['lon'] or ''},{r['unit'] or ''},{r['latest_level'] or ''},{r['latest_reading'] or ''},{r['reading_count']}")
+    return Response("\n".join(lines), mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=flood-stations.csv"})

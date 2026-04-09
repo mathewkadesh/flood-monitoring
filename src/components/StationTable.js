@@ -206,56 +206,58 @@ function StationTable({ api }) {
         </div>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            {[
-              ['id','Station ID'],
-              ['name','Name'],
-              ['river','River'],
-              ['town','Town'],
-              ['level','Level (m)'],
-              ['status','Status'],
-              ['readings','Readings'],
-            ].map(([key,label]) => (
-              <th key={key} onClick={() => handleSort(key)}>
-                {label} {arrow(key)}
-              </th>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              {[
+                ['id','Station ID'],
+                ['name','Name'],
+                ['river','River'],
+                ['town','Town'],
+                ['level','Level (m)'],
+                ['status','Status'],
+                ['readings','Readings'],
+              ].map(([key,label]) => (
+                <th key={key} onClick={() => handleSort(key)}>
+                  {label} {arrow(key)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && !loading ? (
+              <tr><td colSpan={7} style={{textAlign:'center',color:'#7A8BA0',padding:32}}>
+                No stations found
+              </td></tr>
+            ) : filtered.map(s => (
+              <React.Fragment key={s.id}>
+                <tr
+                  className={expanded===s.id ? 'expanded' : ''}
+                  onClick={() => setExpanded(expanded===s.id ? null : s.id)}
+                >
+                  <td>{s.id}</td>
+                  <td className="name">
+                    {expanded===s.id
+                      ? <FiChevronUp size={12} style={{marginRight:6,color:'#00A86B'}}/>
+                      : <FiChevronDown size={12} style={{marginRight:6,color:'#7A8BA0'}}/>
+                    }
+                    {s.name}
+                  </td>
+                  <td>{s.river}</td>
+                  <td>{s.town}</td>
+                  <td style={{color: s.level!==null ? statusColor[s.status] : '#7A8BA0'}}>
+                    {s.level !== null ? s.level : '—'}
+                  </td>
+                  <td><span className={`badge ${s.status}`}>{s.status}</span></td>
+                  <td>{s.readings?.toLocaleString() || '—'}</td>
+                </tr>
+                {expanded===s.id && <ExpandedRow station={s} api={api}/>}
+              </React.Fragment>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.length === 0 && !loading ? (
-            <tr><td colSpan={7} style={{textAlign:'center',color:'#7A8BA0',padding:32}}>
-              No stations found
-            </td></tr>
-          ) : filtered.map(s => (
-            <React.Fragment key={s.id}>
-              <tr
-                className={expanded===s.id ? 'expanded' : ''}
-                onClick={() => setExpanded(expanded===s.id ? null : s.id)}
-              >
-                <td>{s.id}</td>
-                <td className="name">
-                  {expanded===s.id
-                    ? <FiChevronUp size={12} style={{marginRight:6,color:'#00A86B'}}/>
-                    : <FiChevronDown size={12} style={{marginRight:6,color:'#7A8BA0'}}/>
-                  }
-                  {s.name}
-                </td>
-                <td>{s.river}</td>
-                <td>{s.town}</td>
-                <td style={{color: s.level!==null ? statusColor[s.status] : '#7A8BA0'}}>
-                  {s.level !== null ? s.level : '—'}
-                </td>
-                <td><span className={`badge ${s.status}`}>{s.status}</span></td>
-                <td>{s.readings?.toLocaleString() || '—'}</td>
-              </tr>
-              {expanded===s.id && <ExpandedRow station={s} api={api}/>}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
 
       <div className="pagination">
         <span style={{fontSize:11,color:'#7A8BA0'}}>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
-import { FiMapPin, FiAlertTriangle, FiDroplet } from 'react-icons/fi';
+import { FiMapPin } from 'react-icons/fi';
 import 'leaflet/dist/leaflet.css';
 
 const statusColor = {
@@ -112,11 +112,11 @@ function MapView({ api }) {
         <MapContainer
           center={[52.5, -1.5]}
           zoom={6}
+          attributionControl={false}
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           />
 
           {filtered.length > 0 && <FitBounds stations={filtered} />}
@@ -140,7 +140,8 @@ function MapView({ api }) {
                   color: '#E8EDF4',
                   borderRadius: 10,
                   padding: '14px 16px',
-                  minWidth: 220,
+                  minWidth: 0,
+                  width: 'min(220px, 68vw)',
                   fontFamily: 'Segoe UI, sans-serif'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -156,7 +157,7 @@ function MapView({ api }) {
                   <div style={{ fontSize: 12, color: '#7A8BA0', marginBottom: 10 }}>
                     {s.river} · {s.town}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className="map-popup-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                     {[
                       ['Station ID', s.id],
                       ['Level', s.level !== null ? s.level + ' m' : 'Offline'],

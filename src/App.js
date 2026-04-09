@@ -7,8 +7,10 @@ import WaterLevelChart from './components/WaterLevelChart';
 import Top5Panel from './components/Top5Panel';
 import PipelineLog from './components/PipelineLog';
 import MapView from './components/MapView';
+import BiDashboard from './components/BiDashboard';
 
 const API = 'http://127.0.0.1:5000/api';
+const BRAND_ICON = `${process.env.PUBLIC_URL}/flood-gauge-icon.svg`;
 
 function App() {
   const [stats, setStats]       = useState({
@@ -28,7 +30,7 @@ function App() {
     <div className="app">
       <header className="topbar">
         <div className="logo">
-          <div className="logo-dot">EA</div>
+          <img className="logo-icon" src={BRAND_ICON} alt="Flood Monitor icon" />
           <span>Flood Monitor <span className="sub">· Pipeline Dashboard</span></span>
         </div>
         <div className="topbar-right">
@@ -44,7 +46,10 @@ function App() {
         <section className="dashboard-hero">
           <div className="dashboard-hero-copy">
             <span className="dashboard-kicker">Environment Agency Feed</span>
-            <h1 className="dashboard-title">National Flood Operations Dashboard</h1>
+            <div className="dashboard-title-row">
+              <img className="dashboard-title-icon" src={BRAND_ICON} alt="Flood Monitor icon" />
+              <h1 className="dashboard-title">National Flood Operations Dashboard</h1>
+            </div>
             <p className="dashboard-subtitle">
               Monitor live warnings, ingest health, river activity, and station-level risk from one operational view.
             </p>
@@ -112,10 +117,17 @@ function App() {
           >
             <FiMap size={13} /> UK Map
           </button>
+          <button
+             className={`view-tab ${activeTab === 'bi' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bi')}
+                >
+              <FiDatabase size={13} /> BI Analytics
+          </button>
         </div>
 
         {activeTab === 'table' && <StationTable api={API} />}
         {activeTab === 'map'   && <MapView api={API} />}
+        {activeTab === 'bi' && <BiDashboard />}
       </main>
     </div>
   );
