@@ -8,7 +8,9 @@ app = Flask(__name__)
 CORS(app)
 
 DB_PATH = "db/flood.db"
-EA_BASE = "http://environment.data.gov.uk/flood-monitoring"
+EA_BASE = "https://environment.data.gov.uk/flood-monitoring"
+RAIN_URL = "https://environment.data.gov.uk/flood-monitoring/data/readings"
+RAINFALL_CACHE = []
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
@@ -187,6 +189,7 @@ def top5():
 def chart_top_stations():
     conn        = get_conn()
     range_param = request.args.get("range", "7d")
+    bucket_limit = None
 
     if range_param == "24h":
         hours_back  = 24
@@ -196,10 +199,12 @@ def chart_top_stations():
         hours_back  = 30 * 24
         group_by    = "DATE(timestamp)"
         label_fmt   = "strftime('%m-%d', timestamp)"
+        bucket_limit = 30
     else:
         hours_back  = 7 * 24
         group_by    = "DATE(timestamp)"
         label_fmt   = "strftime('%m-%d', timestamp)"
+        bucket_limit = 7
 
     top = conn.execute("""
         SELECT s.station_id, s.label, s.river,
@@ -212,8 +217,20 @@ def chart_top_stations():
         LIMIT 3
     """).fetchall()
 
-    from datetime import datetime, timedelta, timezone
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours_back)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    from datetime import datetime, timedelta
+    latest_row = conn.execute("""
+        SELECT MAX(timestamp) AS latest_ts
+        FROM readings
+        WHERE value IS NOT NULL
+    """).fetchone()
+
+    latest_ts = latest_row["latest_ts"] if latest_row else None
+    if latest_ts:
+        latest_dt = datetime.strptime(latest_ts, "%Y-%m-%dT%H:%M:%SZ")
+    else:
+        latest_dt = datetime.utcnow()
+
+    cutoff = (latest_dt - timedelta(hours=hours_back)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     result = []
     for st in top:
@@ -228,6 +245,9 @@ def chart_top_stations():
             GROUP BY {group_by}
             ORDER BY {group_by} ASC
         """, (st["station_id"], cutoff)).fetchall()
+
+        if bucket_limit is not None:
+            rows = rows[-bucket_limit:]
 
         result.append({
             "station_id": st["station_id"],
@@ -327,9 +347,7 @@ def pipeline_runs():
     conn.close()
     return jsonify([dict(r) for r in rows])
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
-
+# ── BI routes ──────────────────────────────────────────────────────
 @app.route("/api/bi/catchment-summary")
 def catchment_summary():
     conn = get_conn()
@@ -372,29 +390,55 @@ def hourly_pattern():
 @app.route("/api/rainfall")
 def rainfall():
     try:
-        rain_url = "http://environment.data.gov.uk/flood-monitoring/data/readings?parameter=rainfall&_sorted&_limit=100&_view=full"
+        rain_url = f"{RAIN_URL}?parameter=rainfall&latest&_sorted&_limit=100&_view=full"
         req = urllib.request.Request(rain_url, headers={"User-Agent": "flood-monitor/1.0"})
-        with urllib.request.urlopen(req, timeout=8) as r:
+        with urllib.request.urlopen(req, timeout=12) as r:
             data  = json.loads(r.read())
             items = data.get("items", [])
+
+        if isinstance(items, dict):
+            items = [items]
+
         result = []
         for item in items:
-            measure = item.get("measure", {})
-            station = measure.get("station", {}) if isinstance(measure, dict) else {}
-            val     = item.get("value")
-            dt      = item.get("dateTime", "")
-            label   = station.get("label", "") if isinstance(station, dict) else ""
-            town    = station.get("town", "") if isinstance(station, dict) else ""
-            if val is not None and dt:
+            try:
+                measure = item.get("measure", {})
+                station = measure.get("station", {}) if isinstance(measure, dict) else {}
+                val     = item.get("value")
+                dt      = item.get("dateTime", "")
+                station_ref = measure.get("stationReference", "") if isinstance(measure, dict) else ""
+
+                if not dt or val is None:
+                    continue
+
+                if isinstance(station, dict):
+                    station_label = station.get("label", "") or station.get("notation", "")
+                    label = station_ref or station_label
+                    town = station.get("town", "")
+                else:
+                    label = station_ref
+                    town = ""
+
+                if label == "" and isinstance(measure, dict):
+                    label = measure.get("label", "") or measure.get("notation", "")
+
                 result.append({
                     "dateTime": dt,
                     "value":    round(float(val), 3),
-                    "station":  label,
+                    "station":  label or "Unknown station",
                     "town":     town,
                 })
-        return jsonify(result)
-    except Exception as e:
-        return jsonify([])
+            except (TypeError, ValueError):
+                continue
+
+        if result:
+            global RAINFALL_CACHE
+            RAINFALL_CACHE = result
+            return jsonify(result)
+
+        return jsonify(RAINFALL_CACHE)
+    except Exception:
+        return jsonify(RAINFALL_CACHE)
 
 @app.route("/api/export/stations")
 def export_stations():
@@ -417,3 +461,6 @@ def export_stations():
         lines.append(f"{r['station_id']},{r['label'] or ''},{r['river'] or ''},{r['town'] or ''},{r['lat'] or ''},{r['lon'] or ''},{r['unit'] or ''},{r['latest_level'] or ''},{r['latest_reading'] or ''},{r['reading_count']}")
     return Response("\n".join(lines), mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=flood-stations.csv"})
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

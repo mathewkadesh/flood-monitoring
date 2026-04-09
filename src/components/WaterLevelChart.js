@@ -110,6 +110,11 @@ function WaterLevelChart() {
     ...chartData.flatMap((entry) => keys.map((key) => entry[key] ?? 0))
   );
   const yDomainMax = Math.max(1.5, Math.ceil((chartMax + 0.15) * 10) / 10);
+  const expectedPoints = range === '24h' ? 24 : range === '7d' ? 7 : 30;
+  const historyLimited = range !== '24h' && chartData.length < expectedPoints;
+  const historyRangeLabel = chartData.length > 0
+    ? `${chartData[0].date} to ${chartData[chartData.length - 1].date}`
+    : 'No history';
 
   const rangeOptions = [
     { key: '24h', label: '24h' },
@@ -195,6 +200,22 @@ function WaterLevelChart() {
             </div>
             <div className="chart-metric-sub">{risingStation?.name || 'No delta available'}</div>
           </div>
+        </div>
+      )}
+
+      {!loading && chartData.length > 0 && historyLimited && (
+        <div style={{
+          marginBottom: 14,
+          padding: '10px 12px',
+          borderRadius: 8,
+          border: '1px solid rgba(59,130,246,0.2)',
+          background: 'rgba(59,130,246,0.08)',
+          color: '#93C5FD',
+          fontSize: 11,
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          {range} view is limited to {chartData.length} available day{chartData.length === 1 ? '' : 's'} in the database.
+          Current coverage: {historyRangeLabel}.
         </div>
       )}
 
@@ -331,7 +352,7 @@ function WaterLevelChart() {
             </div>
             <span style={{ fontSize: 10, color: '#64748B',
               fontFamily: 'JetBrains Mono, monospace' }}>
-              {chartData.length} data points · Live DB
+              {chartData.length} of {expectedPoints} {range === '24h' ? 'hourly points' : 'days'} · Live DB
             </span>
           </div>
         </>

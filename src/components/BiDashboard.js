@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, LineChart, Line, Legend,
-  RadialBarChart, RadialBar, Cell
+  Cell
 } from 'recharts';
 import { FiDownload, FiDatabase, FiDroplet, FiClock, FiTrendingUp } from 'react-icons/fi';
 
@@ -10,6 +10,14 @@ const API = 'http://127.0.0.1:5000/api';
 const COLORS = ['#00A86B','#3B82F6','#F59E0B','#EF4444','#8B5CF6',
                  '#06B6D4','#EC4899','#10B981','#F97316','#6366F1',
                  '#84CC16','#14B8A6','#FB923C','#A78BFA','#34D399'];
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+  return response.json();
+}
 
 const CustomTooltip = ({ active, payload, label, unit = '' }) => {
   if (!active || !payload?.length) return null;
@@ -35,26 +43,45 @@ function BiDashboard() {
   const [hourly, setHourly]       = useState([]);
   const [rainfall, setRainfall]   = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState('');
   const [activeTab, setActiveTab] = useState('catchment');
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API}/bi/catchment-summary`).then(r => r.json()),
-      fetch(`${API}/bi/hourly-pattern`).then(r => r.json()),
-      fetch(`${API}/rainfall`).then(r => r.json()),
-    ]).then(([c, h, rain]) => {
-      setCatchment(c);
-      setHourly(h);
-      // Group rainfall by station for chart
-      const grouped = {};
-      rain.forEach(r => {
-        const h = r.dateTime?.slice(11,16) || '';
-        if (!grouped[h]) grouped[h] = { time: h };
-        if (r.station) grouped[h][r.station] = r.value;
-      });
-      setRainfall(Object.values(grouped).slice(0, 24));
+    Promise.allSettled([
+      fetchJson(`${API}/bi/catchment-summary`),
+      fetchJson(`${API}/bi/hourly-pattern`),
+      fetchJson(`${API}/rainfall`),
+    ]).then(([catchmentResult, hourlyResult, rainfallResult]) => {
+      if (catchmentResult.status === 'fulfilled') {
+        setCatchment(catchmentResult.value);
+      }
+
+      if (hourlyResult.status === 'fulfilled') {
+        setHourly(hourlyResult.value);
+      }
+
+      if (rainfallResult.status === 'fulfilled') {
+        const latestStations = [...rainfallResult.value]
+          .sort((a, b) => (b.value || 0) - (a.value || 0))
+          .slice(0, 12);
+        setRainfall(latestStations);
+      }
+
+      const failed = [
+        catchmentResult.status !== 'fulfilled' ? 'river catchments' : null,
+        hourlyResult.status !== 'fulfilled' ? 'hourly pattern' : null,
+        rainfallResult.status !== 'fulfilled' ? 'rainfall feed' : null,
+      ].filter(Boolean);
+
+      if (failed.length) {
+        setError(`Some BI sources failed to load: ${failed.join(', ')}.`);
+      }
+
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => {
+      setError('BI data could not be loaded.');
+      setLoading(false);
+    });
   }, []);
 
   const tabs = [
@@ -131,6 +158,21 @@ function BiDashboard() {
         <div style={{ textAlign: 'center', color: '#64748B',
           fontSize: 12, padding: '40px 0' }}>
           Loading BI data from database...
+        </div>
+      )}
+
+      {!loading && error && (
+        <div style={{
+          marginBottom: 12,
+          padding: '10px 12px',
+          borderRadius: 8,
+          border: '1px solid rgba(245, 158, 11, 0.28)',
+          background: 'rgba(245, 158, 11, 0.08)',
+          color: '#F59E0B',
+          fontSize: 11,
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          {error}
         </div>
       )}
 
@@ -303,35 +345,30 @@ function BiDashboard() {
             Live Rainfall Feed — EA API
           </div>
           <p style={{ fontSize: 11, color: '#64748B', marginBottom: 14 }}>
-            Real-time rainfall readings from EA monitoring network.
-            Updated every 15 minutes.
+            Latest rainfall snapshot across Environment Agency monitors.
+            Ranked by current reading strength.
           </p>
           {rainfall.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#64748B',
               fontSize: 12, padding: '40px 0' }}>
-              No rainfall data available at this time
+              Live rainfall feed is currently unavailable
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={rainfall}
-                margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                margin={{ top: 5, right: 10, left: -20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3"
                   stroke="rgba(255,255,255,0.04)"/>
-                <XAxis dataKey="time"
+                <XAxis dataKey="station"
                   tick={{ fill: '#64748B', fontSize: 10 }}
+                  angle={-35} textAnchor="end"
                   axisLine={false} tickLine={false}/>
                 <YAxis tick={{ fill: '#64748B', fontSize: 10 }}
                   axisLine={false} tickLine={false}
                   tickFormatter={v => `${v}mm`}/>
                 <Tooltip content={<CustomTooltip unit="mm"/>}/>
-                {Object.keys(rainfall[0] || {})
-                  .filter(k => k !== 'time')
-                  .slice(0, 5)
-                  .map((key, i) => (
-                  <Bar key={key} dataKey={key}
-                    fill={COLORS[i]} radius={[2,2,0,0]}
-                    stackId="rain"/>
-                ))}
+                <Bar dataKey="value" name="Rainfall"
+                  fill="#3B82F6" radius={[4,4,0,0]}/>
               </BarChart>
             </ResponsiveContainer>
           )}
