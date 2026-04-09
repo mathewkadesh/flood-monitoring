@@ -1,0 +1,119 @@
+[
+  {
+    "label": "Stogumber Escott Lane",
+    "readings": [
+      {
+        "day": "04-01",
+        "value": 0.174
+      },
+      {
+        "day": "04-02",
+        "value": 0.173
+      },
+      {
+        "day": "04-03",
+        "value": 0.173
+      },
+      {
+        "day": "04-04",
+        "value": 0.171
+      },
+      {
+        "day": "04-05",
+        "value": 0.17
+      },
+      {
+        "day": "04-06",
+        "value": 0.168
+      },
+      {
+        "day": "04-07",
+        "value": 0.167
+      },
+      {
+        "day": "04-08",
+        "value": 0.167
+      }
+    ],
+    "river": "Doniford Stream",
+    "station_id": "51129"
+  },
+  {
+    "label": "Swallowfield",
+    "readings": [
+      {
+        "day": "04-01",
+        "value": 0.326
+      },
+      {
+        "day": "04-02",
+        "value": 0.327
+      },
+      {
+        "day": "04-03",
+        "value": 0.326
+      },
+      {
+        "day": "04-04",
+        "value": 0.326
+      },
+      {
+        "day": "04-05",
+        "value": 0.323
+      },
+      {
+        "day": "04-06",
+        "value": 0.315
+      },
+      {
+        "day": "04-07",
+        "value": 0.315
+      },
+      {
+        "day": "04-08",
+        "value": 0.316
+      }
+    ],
+    "river": "River Blackwater",
+    "station_id": "2469_w1TH"
+  },
+  {
+    "label": "King's Lynn",
+    "readings": [
+      {
+        "day": "04-01",
+        "value": 0.75
+      },
+      {
+        "day": "04-02",
+        "value": 0.759
+      },
+      {
+        "day": "04-03",
+        "value": 0.54
+      },
+      {
+        "day": "04-04",
+        "value": 0.622
+      },
+      {
+        "day": "04-05",
+        "value": 0.683
+      },
+      {
+        "day": "04-06",
+        "value": 0.512
+      },
+      {
+        "day": "04-07",
+        "value": 0.371
+      },
+      {
+        "day": "04-08",
+        "value": 0.23
+      }
+    ],
+    "river": "River Great Ouse",
+    "station_id": "E47901"
+  }
+]

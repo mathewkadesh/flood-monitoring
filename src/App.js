@@ -8,8 +8,8 @@ import Top5Panel from './components/Top5Panel';
 import PipelineLog from './components/PipelineLog';
 import MapView from './components/MapView';
 import BiDashboard from './components/BiDashboard';
+import { getStats, isDemoMode } from './lib/apiClient';
 
-const API = 'http://127.0.0.1:5000/api';
 const BRAND_ICON = `${process.env.PUBLIC_URL}/flood-gauge-icon.svg`;
 
 function App() {
@@ -20,8 +20,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('table');
 
   useEffect(() => {
-    fetch(`${API}/stats`)
-      .then(r => r.json())
+    getStats()
       .then(setStats)
       .catch(console.error);
   }, []);
@@ -53,6 +52,11 @@ function App() {
             <p className="dashboard-subtitle">
               Monitor live warnings, ingest health, river activity, and station-level risk from one operational view.
             </p>
+            {isDemoMode() && (
+              <p className="dashboard-subtitle" style={{ marginTop: 10 }}>
+                GitHub Pages demo mode uses a bundled snapshot of the latest local dataset.
+              </p>
+            )}
           </div>
           <div className="dashboard-hero-meta">
             <div className="hero-context-card">
@@ -102,7 +106,7 @@ function App() {
           <PipelineLog />
         </div>
 
-        <Top5Panel api={API} />
+        <Top5Panel />
 
         <div className="view-tabs">
           <button
@@ -125,8 +129,8 @@ function App() {
           </button>
         </div>
 
-        {activeTab === 'table' && <StationTable api={API} />}
-        {activeTab === 'map'   && <MapView api={API} />}
+        {activeTab === 'table' && <StationTable />}
+        {activeTab === 'map'   && <MapView />}
         {activeTab === 'bi' && <BiDashboard />}
       </main>
     </div>

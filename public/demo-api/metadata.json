@@ -1,0 +1,19 @@
+{
+  "generatedFrom": "local SQLite snapshot",
+  "generatedFiles": [
+    "bi-catchment-summary.json",
+    "bi-hourly-pattern.json",
+    "chart-top-stations-24h.json",
+    "chart-top-stations-30d.json",
+    "chart-top-stations-7d.json",
+    "flood-stations.csv",
+    "metadata.json",
+    "pipeline-runs.json",
+    "rainfall.json",
+    "station-readings.json",
+    "stations.json",
+    "stats.json",
+    "top5.json",
+    "warnings.json"
+  ]
+}

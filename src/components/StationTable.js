@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiSearch, FiFilter, FiChevronDown, FiChevronUp, FiMapPin, FiDroplet, FiClock, FiActivity } from 'react-icons/fi';
+import { getStationReadings, getStations } from '../lib/apiClient';
 
 const statusColor = { normal: '#00A86B', alert: '#F59E0B', severe: '#EF4444', offline: '#7A8BA0' };
 
-function ExpandedRow({ station, api }) {
+function ExpandedRow({ station }) {
   const [readings, setReadings] = useState([]);
 
   useEffect(() => {
-    fetch(`${api}/stations/${station.id}/readings`)
-      .then(r => r.json())
+    getStationReadings(station.id)
       .then(setReadings)
       .catch(() => {});
-  }, [station.id, api]);
+  }, [station.id]);
 
   return (
     <tr className="expanded-row">
@@ -84,7 +84,7 @@ function ExpandedRow({ station, api }) {
   );
 }
 
-function StationTable({ api }) {
+function StationTable() {
   const [stations, setStations]     = useState([]);
   const [total, setTotal]           = useState(0);
   const [page, setPage]             = useState(1);
@@ -101,13 +101,12 @@ function StationTable({ api }) {
 
   const fetchStations = useCallback(() => {
     setLoading(true);
-    const params = new URLSearchParams({
-      page, limit: 50,
-      ...(search && { search }),
-      ...(riverFilter && { river: riverFilter }),
-    });
-    fetch(`${api}/stations?${params}`)
-      .then(r => r.json())
+    getStations({
+      page,
+      limit: 50,
+      search,
+      river: riverFilter,
+    })
       .then(data => {
         setStations(data.stations || []);
         setTotal(data.total || 0);
@@ -115,7 +114,7 @@ function StationTable({ api }) {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [page, search, riverFilter, api]);
+  }, [page, search, riverFilter]);
 
   useEffect(() => { fetchStations(); }, [fetchStations]);
 
@@ -252,7 +251,7 @@ function StationTable({ api }) {
                   <td><span className={`badge ${s.status}`}>{s.status}</span></td>
                   <td>{s.readings?.toLocaleString() || '—'}</td>
                 </tr>
-                {expanded===s.id && <ExpandedRow station={s} api={api}/>}
+                {expanded===s.id && <ExpandedRow station={s} />}
               </React.Fragment>
             ))}
           </tbody>

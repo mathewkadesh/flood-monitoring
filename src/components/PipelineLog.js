@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiCheckCircle, FiAlertCircle, FiRefreshCw, FiClock, FiAlertTriangle, FiX } from 'react-icons/fi';
+import { getPipelineRuns, getWarnings } from '../lib/apiClient';
 
 const severityColor = {
   1: '#EF4444',
@@ -23,15 +24,11 @@ function PipelineLog() {
   const [selectedWarning, setSelectedWarning] = useState(null);
 
   useEffect(() => {
-    // Fetch real pipeline runs
-    fetch('http://127.0.0.1:5000/api/pipeline/runs')
-      .then(r => r.json())
+    getPipelineRuns()
       .then(data => { setRuns(data); setLoading(false); })
       .catch(() => setLoading(false));
 
-    // Fetch live EA flood warnings
-    fetch('http://127.0.0.1:5000/api/warnings')
-      .then(r => r.json())
+    getWarnings()
       .then(setWarnings)
       .catch(() => {});
   }, []);

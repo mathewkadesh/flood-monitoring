@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { FiMapPin } from 'react-icons/fi';
 import 'leaflet/dist/leaflet.css';
+import { getStations } from '../lib/apiClient';
 
 const statusColor = {
   normal:  '#00A86B',
@@ -24,7 +25,7 @@ function FitBounds({ stations }) {
   return null;
 }
 
-function MapView({ api }) {
+function MapView() {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -33,8 +34,7 @@ function MapView({ api }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${api}/stations?limit=500&page=1`)
-      .then(r => r.json())
+    getStations({ limit: 500, page: 1 })
       .then(data => {
         const all = data.stations || [];
         setStations(all);
@@ -47,7 +47,7 @@ function MapView({ api }) {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [api]);
+  }, []);
 
   const filtered = filter === 'all'
     ? stations.filter(s => s.lat && s.lon)

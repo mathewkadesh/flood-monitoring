@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiTrendingUp, FiAlertOctagon, FiActivity, FiDroplet, FiAlertTriangle } from 'react-icons/fi';
+import { getTop5 } from '../lib/apiClient';
 
 const severityColor = { 1: '#EF4444', 2: '#F59E0B', 3: '#3B82F6', 4: '#64748B' };
 const severityLabel = { 1: 'SEVERE', 2: 'WARNING', 3: 'ALERT', 4: 'INACTIVE' };
@@ -40,16 +41,15 @@ function Item({ rank, color, name, sub, value, valueLabel, max }) {
   );
 }
 
-function Top5Panel({ api }) {
+function Top5Panel() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${api}/top5`)
-      .then(r => r.json())
+    getTop5()
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [api]);
+  }, []);
 
   if (loading) return (
     <div style={{ padding: '16px 0', textAlign: 'center', color: '#64748B', fontSize: 12 }}>Loading live insights...</div>

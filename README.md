@@ -1,240 +1,249 @@
-# 🌊 EA Flood Monitor — Real-Time Pipeline & Dashboard
+# Flood Monitor
 
-> **Technical Assessment Submission — AECOM Data Engineer Role**  
-> **Candidate:** Mathew Kadesh  
-> **Deadline:** 14th April 2026  
-> **GitHub:** https://github.com/mathewkadesh/flood-monitoring
+Real-time flood monitoring pipeline and dashboard built on Environment Agency data.
 
----
+This project ingests station readings into SQLite, serves analytical and operational APIs through Flask, and exposes the data in a React dashboard with station search, trend charts, BI views, rainfall snapshots, and map exploration.
 
-## A Word on My Development Approach
+## Overview
 
-Before anything else, I want to be upfront about how I built this.
+- Async Python pipeline ingests Environment Agency station readings
+- SQLite stores stations, readings, pipeline audit logs, and daily aggregates
+- Flask exposes operational, BI, export, warning, and chart endpoints
+- React dashboard visualizes live monitoring, trends, map data, and BI analytics
 
-I used AI (Claude by Anthropic) as a tool during this project — the same way 
-a professional uses any powerful tool: **under my direction, in service of my 
-decisions, and never as a replacement for my thinking.**
+## Screenshots
 
-Every architectural decision in this project is mine:
-- I chose async Python because 3,694 stations fetched sequentially would take hours
-- I chose SQLite with WAL mode because it handles concurrent reads during pipeline writes
-- I designed the incremental update logic around `last_fetched` per station
-- I structured the API endpoints around what analysts and scientists actually need
-- I decided to build a React dashboard to demonstrate the data is real and queryable
+### Dashboard Overview
 
-AI helped me move faster on implementation — boilerplate code, CSS, debugging. 
-But I directed every step, evaluated every output, and made every call.
+![Dashboard overview](assets/dashboard.png)
 
-**My hand was always on top.**
+### Water Level Trend
 
-In 2026, the engineers who thrive are not those who avoid AI — they are those 
-who know how to use it with precision and critical judgment. I can explain every 
-line of this project, every query, every decision. The speed came from AI. 
-The knowledge, the structure, and the direction came from me.
+![Water level trend](assets/WaterLevelTrend.png)
 
----
+### Top 5 Operational Snapshot
 
-## 📸 Dashboard Preview
+![Top 5 operational snapshot](assets/top5.png)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 ![Dashboard](docs/dashboard-screenshot.png)
 =======
 ![Dashboard](docs/dashboard.png)
 >>>>>>> 2460d96 (feat: ReadME update)
+=======
+### BI River Catchments
+>>>>>>> f30987d (feat: ReadME update2)
 
-**Features:**
-- ✅ Live EA API flood warnings banner
-- ✅ Real water level trend chart (24h / 7d / 30d)
-- ✅ Top 5 insights — highest levels, severe stations, most active, top rivers, EA warnings
-- ✅ 3,694 stations with live search, filter, sort, pagination
-- ✅ Expandable row detail with recent readings
-- ✅ UK map with colour-coded station markers
-- ✅ CSV export
-- ✅ Pipeline run log with real audit data
+![BI river catchments](assets/RiverCatchments.png)
 
----
+### BI Hourly Pattern
 
-## 🏗️ Architecture
-Environment Agency Real-Time Flood API
-│
-▼
-┌─────────────────────────┐
-│   Python Pipeline       │  async · aiohttp · 10 workers
-│   pipeline/fetch.py     │  incremental · idempotent
-└───────────┬─────────────┘
-│
-▼
-┌─────────────────────────┐
-│   SQLite Database       │  WAL mode · 2.3M readings
-│   db/flood.db           │  stations · readings · pipeline_runs
-└───────────┬─────────────┘
-│
-▼
-┌─────────────────────────┐
-│   Flask REST API        │  7 endpoints · CORS enabled
-│   api.py                │  real-time · paginated
-└───────────┬─────────────┘
-│
-▼
-┌─────────────────────────┐
-│   React Dashboard       │  Recharts · Leaflet · React Icons
-│   src/                  │  live data · UK map · filters
-└─────────────────────────┘
+![BI hourly pattern](assets/HourlyPattern.png)
 
----
+## Architecture
 
-## 📊 Key Stats from This Submission
+```mermaid
+flowchart LR
+    EA["Environment Agency Flood Monitoring API"]
+    PIPE["Async Python Pipeline<br/>pipeline/fetch.py"]
+    DB[("SQLite<br/>db/flood.db")]
+    API["Flask API<br/>api.py"]
+    UI["React Dashboard<br/>src/"]
+    TESTS["Pytest Suite<br/>tests/"]
+
+    EA --> PIPE
+    PIPE --> DB
+    DB --> API
+    API --> UI
+    DB --> TESTS
+```
+
+## Data Flow
+
+```mermaid
+flowchart TD
+    A["Fetch station catalogue"] --> B["Resolve station lookback window"]
+    B --> C["Pull readings concurrently"]
+    C --> D["Upsert stations"]
+    D --> E["Insert readings with duplicate protection"]
+    E --> F["Log pipeline run metadata"]
+    F --> G["Serve APIs for dashboard and BI views"]
+```
+
+## Current Dataset Snapshot
+
+These values reflect the database currently present in this repository.
 
 | Metric | Value |
+|---|---:|
+| Stations | 3,694 |
+| Readings | 2,308,750 |
+| Pipeline runs logged | 1 |
+| Distinct reading dates loaded | 8 |
+| API routes exposed | 11 |
+
+## Features
+
+### Operational dashboard
+
+- Water level trend view for `24h`, `7d`, and `30d`
+- Top 5 operational snapshot across highest levels, severe stations, most active stations, river concentration, and warnings
+- Pipeline audit log view
+- Live flood warning integration
+
+### Station exploration
+
+- Paginated station table
+- Search by label, river, or station id
+- Expandable station readings
+- UK map view with station markers
+- CSV export
+
+### BI layer
+
+- River catchment summary
+- Hour-of-day activity pattern
+- Live rainfall snapshot from the EA API
+- Station export endpoint for downstream analysis
+
+## Stack
+
+| Layer | Technology |
 |---|---|
-| Monitoring stations | 3,694 |
-| Readings stored | 2,308,750 |
-| Pipeline runtime | ~2 minutes |
-| API endpoints | 7 |
-| Dashboard components | 6 |
-| Test cases | 11 |
+| Ingestion | Python, `asyncio`, `aiohttp` |
+| Storage | SQLite with WAL mode |
+| API | Flask, Flask-CORS |
+| Frontend | React, Recharts, Leaflet, React Icons |
+| Testing | Pytest |
 
----
+## Project Structure
 
-## 🚀 Quick Start
+```text
+flood-monitoring/
+├── api.py
+├── assets/
+│   ├── dashboard.png
+│   ├── HourlyPattern.png
+│   ├── RiverCatchments.png
+│   ├── top5.png
+│   └── WaterLevelTrend.png
+├── db/
+│   └── flood.db
+├── pipeline/
+│   ├── __init__.py
+│   └── fetch.py
+├── public/
+├── src/
+│   ├── App.js
+│   └── components/
+├── tests/
+│   └── test_pipeline.py
+├── package.json
+├── requirements.txt
+└── README.md
+```
 
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- Git
+## Database Model
 
-### 1. Clone the repo
+The pipeline creates:
+
+- `stations` for metadata and incremental fetch state
+- `readings` for time-series measurements
+- `pipeline_runs` for audit history
+- `v_daily_max` for daily rollups
+
+## API Reference
+
+### Operational endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `/api/stats` | KPI totals for stations, readings, alerts, and runs |
+| `/api/stations` | Paginated station catalogue |
+| `/api/stations/<station_id>/readings` | Recent readings for a station |
+| `/api/chart/top-stations` | Trend data for top stations by range |
+| `/api/top5` | Operational summary cards |
+| `/api/warnings` | Live EA warning data |
+| `/api/pipeline/runs` | Pipeline audit log |
+
+### BI and export endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `/api/bi/catchment-summary` | Catchment aggregates by river |
+| `/api/bi/hourly-pattern` | Hour-of-day activity summary |
+| `/api/rainfall` | Latest rainfall snapshot from EA |
+| `/api/export/stations` | Station export CSV |
+
+## Quick Start
+
+### 1. Clone
+
 ```bash
 git clone https://github.com/mathewkadesh/flood-monitoring.git
 cd flood-monitoring
 ```
 
-### 2. Set up Python environment
+### 2. Create and activate the Python environment
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-### 3. Run the pipeline (builds the database)
+### 3. Build or refresh the database
+
 ```bash
-# Full 7-day backfill — runs once
+# Full backfill
 python3 pipeline/fetch.py --full
 
-# Incremental update — run on schedule
+# Incremental refresh
 python3 pipeline/fetch.py
 ```
 
-### 4. Start the Flask API
+### 4. Start the API
+
 ```bash
 python3 api.py
-# Running on http://127.0.0.1:5000
 ```
 
-### 5. Start the React dashboard
+Flask runs on `http://127.0.0.1:5000`.
+
+### 5. Start the frontend
+
 ```bash
-# In a new terminal tab
 npm install
 npm start
-# Running on http://localhost:3000
 ```
 
----
+React runs on `http://localhost:3000`.
 
-## 🗄️ Database Schema
-```sql
--- Monitoring stations metadata
-CREATE TABLE stations (
-    station_id   TEXT PRIMARY KEY,
-    label        TEXT,
-    river        TEXT,
-    town         TEXT,
-    lat          REAL,
-    lon          REAL,
-    unit         TEXT,
-    last_fetched TEXT    -- ISO8601 UTC — drives incremental updates
-);
+## Example Requests
 
--- Time-series readings
-CREATE TABLE readings (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    station_id   TEXT NOT NULL,
-    measure_id   TEXT,
-    timestamp    TEXT NOT NULL,
-    value        REAL NOT NULL,
-    UNIQUE(station_id, timestamp),  -- idempotent upserts
-    FOREIGN KEY (station_id) REFERENCES stations(station_id)
-);
-
--- Pipeline audit log
-CREATE TABLE pipeline_runs (
-    run_id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    started_at    TEXT NOT NULL,
-    finished_at   TEXT,
-    stations_ok   INTEGER DEFAULT 0,
-    stations_err  INTEGER DEFAULT 0,
-    rows_inserted INTEGER DEFAULT 0,
-    run_type      TEXT DEFAULT 'incremental'
-);
-
--- BI aggregation view
-CREATE VIEW v_daily_max AS
-    SELECT station_id, DATE(timestamp) AS day,
-           MAX(value) AS max_level, MIN(value) AS min_level,
-           AVG(value) AS avg_level, COUNT(*) AS reading_count
-    FROM readings
-    GROUP BY station_id, DATE(timestamp);
-```
-
----
-
-## 🔌 API Reference
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/stats` | GET | KPI summary — stations, readings, alerts |
-| `/api/stations` | GET | Paginated station list with search & filter |
-| `/api/stations/<id>/readings` | GET | Last 168 readings for a station |
-| `/api/chart/top-stations` | GET | Top 3 stations chart data (24h/7d/30d) |
-| `/api/top5` | GET | Top 5 insights across all categories |
-| `/api/warnings` | GET | Live EA flood warnings |
-| `/api/pipeline/runs` | GET | Pipeline audit log |
-
-### Example requests
 ```bash
-# Get all stats
 curl http://127.0.0.1:5000/api/stats
-
-# Search stations
 curl "http://127.0.0.1:5000/api/stations?search=thames&page=1&limit=10"
-
-# Get 24h chart data
 curl "http://127.0.0.1:5000/api/chart/top-stations?range=24h"
-
-# Get live warnings
-curl http://127.0.0.1:5000/api/warnings
+curl http://127.0.0.1:5000/api/bi/catchment-summary
+curl http://127.0.0.1:5000/api/rainfall
 ```
 
----
+## Tests
 
-## 🧪 Running Tests
+Run the backend tests with:
+
 ```bash
 source venv/bin/activate
-pytest tests/ -v
+pytest tests -v
 ```
 
-**Test coverage:**
-- Database schema initialisation
-- Idempotent init (calling twice does not error)
-- Incremental fetch logic (new vs existing stations)
-- URL construction with correct `since` parameter
-- Duplicate row prevention (UNIQUE constraint)
-- 404 station handling (graceful skip)
-- Network error handling (caught and logged)
-- BI view aggregation correctness
+The suite covers database initialization, URL generation, deduplication, data quality checks, pipeline run logging, and daily aggregate view behavior.
 
----
+## Notes
 
+<<<<<<< HEAD
 ## ☁️ Cloud Deployment Plan
 
 For production deployment on AWS:
@@ -297,3 +306,8 @@ flood-monitoring/
 =======
 *Built by Mathew Kadesh · April 2026*
 >>>>>>> 2460d96 (feat: ReadME update)
+=======
+- The dashboard range views are anchored to the latest timestamp in the database, not the local machine clock.
+- The `30d` chart can legitimately show fewer than 30 days if the database contains less history.
+- Rainfall is sourced from the latest EA rainfall snapshot, so the UI presents it as a ranked current view rather than a synthetic time series.
+>>>>>>> f30987d (feat: ReadME update2)

@@ -4,6 +4,7 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea
 } from 'recharts';
 import { FiTrendingUp, FiDownload, FiAlertTriangle, FiActivity } from 'react-icons/fi';
+import { getChartTopStations } from '../lib/apiClient';
 
 const COLORS = ['#00A86B', '#F59E0B', '#3B82F6'];
 
@@ -36,8 +37,7 @@ function WaterLevelChart() {
 
   const fetchData = useCallback((r) => {
     setLoading(true);
-    fetch(`http://127.0.0.1:5000/api/chart/top-stations?range=${r}`)
-      .then(res => res.json())
+    getChartTopStations(r)
       .then(data => {
         setStations(data);
         const dayMap = {};

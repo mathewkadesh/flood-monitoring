@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.5eafba54.css",
-    "main.js": "/static/js/main.3deab50a.js",
-    "static/js/453.9a317cc4.chunk.js": "/static/js/453.9a317cc4.chunk.js",
-    "index.html": "/index.html",
-    "main.5eafba54.css.map": "/static/css/main.5eafba54.css.map",
-    "main.3deab50a.js.map": "/static/js/main.3deab50a.js.map",
-    "453.9a317cc4.chunk.js.map": "/static/js/453.9a317cc4.chunk.js.map"
+    "main.css": "/flood-monitoring/static/css/main.5eafba54.css",
+    "main.js": "/flood-monitoring/static/js/main.5f63535e.js",
+    "static/js/453.9a317cc4.chunk.js": "/flood-monitoring/static/js/453.9a317cc4.chunk.js",
+    "index.html": "/flood-monitoring/index.html",
+    "main.5eafba54.css.map": "/flood-monitoring/static/css/main.5eafba54.css.map",
+    "main.5f63535e.js.map": "/flood-monitoring/static/js/main.5f63535e.js.map",
+    "453.9a317cc4.chunk.js.map": "/flood-monitoring/static/js/453.9a317cc4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.5eafba54.css",
-    "static/js/main.3deab50a.js"
+    "static/js/main.5f63535e.js"
   ]
 }

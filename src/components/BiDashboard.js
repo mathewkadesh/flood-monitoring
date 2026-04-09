@@ -5,19 +5,19 @@ import {
   Cell
 } from 'recharts';
 import { FiDownload, FiDatabase, FiDroplet, FiClock, FiTrendingUp } from 'react-icons/fi';
-
-const API = 'http://127.0.0.1:5000/api';
+import {
+  getCatchmentSummary,
+  getHourlyPattern,
+  getRainfall,
+  getWarningsDownloadUrl,
+  getCatchmentSummaryDownloadUrl,
+  getHourlyPatternDownloadUrl,
+  getPipelineRunsDownloadUrl,
+  getStationsExportUrl,
+} from '../lib/apiClient';
 const COLORS = ['#00A86B','#3B82F6','#F59E0B','#EF4444','#8B5CF6',
                  '#06B6D4','#EC4899','#10B981','#F97316','#6366F1',
                  '#84CC16','#14B8A6','#FB923C','#A78BFA','#34D399'];
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
-  }
-  return response.json();
-}
 
 const CustomTooltip = ({ active, payload, label, unit = '' }) => {
   if (!active || !payload?.length) return null;
@@ -45,12 +45,17 @@ function BiDashboard() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
   const [activeTab, setActiveTab] = useState('catchment');
+  const exportUrl = getStationsExportUrl();
+  const warningsUrl = getWarningsDownloadUrl();
+  const catchmentUrl = getCatchmentSummaryDownloadUrl();
+  const hourlyUrl = getHourlyPatternDownloadUrl();
+  const pipelineRunsUrl = getPipelineRunsDownloadUrl();
 
   useEffect(() => {
     Promise.allSettled([
-      fetchJson(`${API}/bi/catchment-summary`),
-      fetchJson(`${API}/bi/hourly-pattern`),
-      fetchJson(`${API}/rainfall`),
+      getCatchmentSummary(),
+      getHourlyPattern(),
+      getRainfall(),
     ]).then(([catchmentResult, hourlyResult, rainfallResult]) => {
       if (catchmentResult.status === 'fulfilled') {
         setCatchment(catchmentResult.value);
@@ -119,7 +124,7 @@ function BiDashboard() {
               Real-time EA rainfall feed
             </p>
           </div>
-          <a href={`${API}/export/stations`} style={{
+          <a href={exportUrl} style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 16px', borderRadius: 8,
             border: '1px solid rgba(0,168,107,0.3)',
@@ -383,7 +388,7 @@ function BiDashboard() {
             {
               title: 'All Stations CSV',
               desc: 'Complete station list with current levels, status, river, town, coordinates and reading count.',
-              url: `${API}/export/stations`,
+              url: exportUrl,
               filename: 'flood-stations.csv',
               color: '#00A86B',
               icon: '📊'
@@ -391,7 +396,7 @@ function BiDashboard() {
             {
               title: 'Chart Data CSV',
               desc: 'Water level trend data for top 3 stations over 7 days. Download from the chart panel above.',
-              url: null,
+              url: warningsUrl,
               note: 'Use the CSV button on the chart',
               color: '#3B82F6',
               icon: '📈'
@@ -399,7 +404,7 @@ function BiDashboard() {
             {
               title: 'Live Warnings JSON',
               desc: 'Current EA flood warnings in JSON format. Direct API access for downstream systems.',
-              url: `${API}/warnings`,
+              url: catchmentUrl,
               filename: 'ea-warnings.json',
               color: '#EF4444',
               icon: '⚠️'
@@ -407,7 +412,7 @@ function BiDashboard() {
             {
               title: 'Catchment Summary',
               desc: 'River catchment aggregates — station counts, avg/peak levels, status breakdown per river.',
-              url: `${API}/bi/catchment-summary`,
+              url: hourlyUrl,
               filename: 'catchment-summary.json',
               color: '#F59E0B',
               icon: '🏔️'
@@ -415,7 +420,7 @@ function BiDashboard() {
             {
               title: 'Hourly Pattern',
               desc: 'Hour-of-day activity pattern across all stations — reading counts and average levels.',
-              url: `${API}/bi/hourly-pattern`,
+              url: pipelineRunsUrl,
               filename: 'hourly-pattern.json',
               color: '#8B5CF6',
               icon: '🕐'
@@ -423,7 +428,7 @@ function BiDashboard() {
             {
               title: 'Pipeline Audit Log',
               desc: 'Full pipeline run history — start times, rows inserted, station counts, error rates.',
-              url: `${API}/pipeline/runs`,
+              url: null,
               filename: 'pipeline-runs.json',
               color: '#06B6D4',
               icon: '🔄'
