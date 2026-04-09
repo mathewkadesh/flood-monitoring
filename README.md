@@ -36,7 +36,11 @@ The knowledge, the structure, and the direction came from me.
 
 ## 📸 Dashboard Preview
 
+<<<<<<< HEAD
 ![Dashboard](docs/dashboard-screenshot.png)
+=======
+![Dashboard](docs/dashboard.png)
+>>>>>>> 2460d96 (feat: ReadME update)
 
 **Features:**
 - ✅ Live EA API flood warnings banner
@@ -288,4 +292,8 @@ flood-monitoring/
 
 ---
 
+<<<<<<< HEAD
 *Built by Mathew Kadesh · April 2026*
+=======
+*Built by Mathew Kadesh · April 2026*
+>>>>>>> 2460d96 (feat: ReadME update)
